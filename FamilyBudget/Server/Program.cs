@@ -1,5 +1,6 @@
 using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Models;
+using FamilyBudget.Server.Services.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,9 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+//services
+builder.Services.AddScoped<IUserProvider, UserProvider>();
 
 var app = builder.Build();
 
