@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+FamilyBudget/Server/FamilyBudgetDb.db
+FamilyBudget/Server/FamilyBudgetDb.db-shm
+FamilyBudget/Server/FamilyBudgetDb.db-wal
