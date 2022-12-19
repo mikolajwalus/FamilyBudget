@@ -14,24 +14,14 @@ namespace FamilyBudget.Server.Tests
     public class ServiceTest
     {
         private const string InMemoryConnectionString = "DataSource=:memory:";
-        private readonly SqliteConnection _connection;
+        private SqliteConnection _connection;
+        private readonly IOptions<OperationalStoreOptions> _operationalStoreOptions = Options.Create(new OperationalStoreOptions());
 
         protected readonly string UserId = Guid.NewGuid().ToString();
         protected readonly IUserProvider UserProvider;
-        protected readonly ApplicationDbContext DbContext;
 
         protected ServiceTest()
         {
-            _connection = new SqliteConnection(InMemoryConnectionString);
-            _connection.Open();
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseSqlite(_connection)
-                    .Options;
-
-            var operationalStoreOptions = Options.Create(new OperationalStoreOptions());
-
-            DbContext = new ApplicationDbContext(options, operationalStoreOptions);
-
             UserProvider = Substitute.For<IUserProvider>();
         }
 
@@ -43,14 +33,20 @@ namespace FamilyBudget.Server.Tests
         [SetUp]
         public void SetUp()
         {
-            DbContext.Database.EnsureCreated();
+            _connection = new SqliteConnection(InMemoryConnectionString);
+            _connection.Open();
 
-            var user = new Faker<ApplicationUser>()
-                .RuleFor(x => x.Id, UserId)
-                .Generate();
+            using (var context = GetDbContext())
+            {
+                context.Database.EnsureCreated();
 
-            DbContext.Add(user);
-            DbContext.SaveChanges();
+                var user = new Faker<ApplicationUser>()
+                    .RuleFor(x => x.Id, UserId)
+                    .Generate();
+
+                context.Add(user);
+                context.SaveChanges();
+            }
 
             UserProvider.UserId.Returns(UserId);
         }
@@ -58,10 +54,27 @@ namespace FamilyBudget.Server.Tests
         [TearDown]
         public void TearDown()
         {
-            DbContext.Database.EnsureDeletedAsync();
+            using (var context = GetDbContext())
+            {
+                context.Database.EnsureDeleted();
+            }
+
+            _connection.Close();
+            _connection.Dispose();
+
+            GC.Collect();
         }
 
-        protected async Task<ApplicationUser> GetMockedUser() =>
-            await DbContext.Users.FindAsync(UserId);
+        protected ApplicationDbContext GetDbContext()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlite(_connection)
+                .Options;
+
+            return new ApplicationDbContext(options, _operationalStoreOptions);
+        }
+
+        protected async Task<ApplicationUser> GetMockedUser(ApplicationDbContext context) =>
+            await context.Users.FindAsync(UserId);
     }
 }

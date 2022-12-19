@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Exceptions;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Budget;
@@ -10,72 +11,83 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
     [TestFixture]
     public class BudgetServiceTests : ServiceTest
     {
-        private readonly BudgetService _sut;
-
-        public BudgetServiceTests()
-        {
-            _sut = new BudgetService(DbContext, UserProvider);
-        }
 
         [Test]
         public async Task GetUserBudgets_ShouldReturnAllUserBudgetsWithProperties()
         {
-            //Arrange
-            int budgetsCount = 5;
-
-            var user = await GetMockedUser();
-
-            var budgetAssignedUsers = new List<ApplicationUser> { user };
-
-            var userBudgets = new Faker<Budget>()
-                .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                .RuleFor(x => x.UsersAssignedToBudget, budgetAssignedUsers)
-                .Generate(budgetsCount);
-
-            await DbContext.AddRangeAsync(userBudgets);
-            await DbContext.SaveChangesAsync();
-
-            //Act
-            var result = await _sut.GetUserBudgets();
-
-            //Assert
-            Assert.AreEqual(budgetsCount, result.Count);
-
-            foreach (var budget in userBudgets)
+            using (var context = GetDbContext())
             {
-                Assert.IsTrue(result.Any(x => x.Id == budget.Id && x.Name == budget.Name && x.Balance == budget.Balance));
+                //Arrange
+                int budgetsCount = 5;
+
+                var user = await GetMockedUser(context);
+
+                var budgetAssignedUsers = new List<ApplicationUser> { user };
+
+                var userBudgets = new Faker<Budget>()
+                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
+                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .RuleFor(x => x.UsersAssignedToBudget, budgetAssignedUsers)
+                    .Generate(budgetsCount);
+
+                await context.AddRangeAsync(userBudgets);
+                await context.SaveChangesAsync();
+
+                var sut = GetSut(context);
+
+                //Act
+                var result = await sut.GetUserBudgets();
+
+                //Assert
+                Assert.AreEqual(budgetsCount, result.Count);
+
+                foreach (var budget in userBudgets)
+                {
+                    Assert.IsTrue(result.Any(x => x.Id == budget.Id && x.Name == budget.Name && x.Balance == budget.Balance));
+                }
             }
         }
 
         [Test]
         public async Task GetUserBudgets_ShouldNotReturnOtherUsers()
         {
-            //Arrange
+            using (var context = GetDbContext())
+            {
+                //Arrange
 
-            var otherUserBudgets = new Faker<Budget>()
-                .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                .Generate(10);
+                var otherUserBudgets = new Faker<Budget>()
+                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
+                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .Generate(10);
 
-            await DbContext.AddRangeAsync(otherUserBudgets);
-            await DbContext.SaveChangesAsync();
+                await context.AddRangeAsync(otherUserBudgets);
+                await context.SaveChangesAsync();
 
-            //Act
-            var result = await _sut.GetUserBudgets();
+                var sut = GetSut(context);
 
-            //Assert
-            Assert.AreEqual(0, result.Count);
+                //Act
+                var result = await sut.GetUserBudgets();
+
+                //Assert
+                Assert.AreEqual(0, result.Count);
+            }
         }
 
         [Test]
         public void GetUserBudgets_ShouldThrowEWxceptionWhenUserNotExists()
         {
-            //Arrange
-            UserProvider.UserId.Returns(Guid.NewGuid().ToString());
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                UserProvider.UserId.Returns(Guid.NewGuid().ToString());
 
-            //Assert
-            Assert.ThrowsAsync<UserNotExistException>(async () => await _sut.GetUserBudgets());
+                var sut = GetSut(context);
+
+                //Act and Assert
+                Assert.ThrowsAsync<UserNotExistException>(async () => await sut.GetUserBudgets());
+            }
         }
+
+        private BudgetService GetSut(ApplicationDbContext context) => new BudgetService(context, UserProvider);
     }
 }
