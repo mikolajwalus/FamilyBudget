@@ -19,7 +19,7 @@ namespace FamilyBudget.Server.Tests
         private SqliteConnection _connection;
         private readonly IOptions<OperationalStoreOptions> _operationalStoreOptions = Options.Create(new OperationalStoreOptions());
 
-        protected readonly string UserId = Guid.NewGuid().ToString();
+        protected string UserId = Guid.NewGuid().ToString();
         protected readonly IUserProvider UserProvider;
 
         protected ServiceTest()
@@ -43,11 +43,12 @@ namespace FamilyBudget.Server.Tests
                 context.Database.EnsureCreated();
 
                 var user = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.Id, UserId)
                     .Generate();
 
                 context.Add(user);
                 context.SaveChanges();
+
+                UserId = user.Id;
             }
 
             UserProvider.UserId.Returns(UserId);
