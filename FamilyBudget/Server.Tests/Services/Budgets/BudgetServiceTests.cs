@@ -113,9 +113,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var result = await sut.GetBudget(budget.Id);
 
                 //Assert
-                Assert.Equals(budget.Id, result.Id);
-                Assert.Equals(budget.Name, result.Name);
-                Assert.Equals(budget.Balance, result.Balance);
+                Assert.AreEqual(budget.Id, result.Id);
+                Assert.AreEqual(budget.Name, result.Name);
+                Assert.AreEqual(budget.Balance, result.Balance);
             }
         }
 

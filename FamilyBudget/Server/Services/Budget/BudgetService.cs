@@ -42,7 +42,23 @@ namespace FamilyBudget.Server.Services.Budget
 
         public async Task<BudgetDto> GetBudget(Guid id)
         {
-            throw new NotImplementedException();
+            var userId = _userProvider.UserId;
+
+            var budget = _context.Budgets
+                .Where(x => x.UsersAssignedToBudget.Any(user => user.Id == userId) && x.Id == id)
+                .FirstOrDefault();
+
+            if (budget is null)
+            {
+                throw new BudgetNotExistException(id);
+            }
+
+            return new BudgetDto
+            {
+                Id = id,
+                Balance = budget.Balance,
+                Name = budget.Name,
+            };
         }
 
         public async Task<BudgetEntriesDto> GetBudgetEntries(BudgetEntriesRequestDto dto)
