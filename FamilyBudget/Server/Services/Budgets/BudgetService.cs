@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FamilyBudget.Server.Services.Budgets
 {
-    public class BudgetService
+    public class BudgetService : IBudgetService
     {
         private readonly ApplicationDbContext _context;
         private readonly string _requestingUserId;

@@ -2,6 +2,7 @@ using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Infractructure.Middleware;
 using FamilyBudget.Server.Models;
+using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Server.Services.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,8 @@ builder.Services.AddRazorPages();
 
 //services
 builder.Services.AddScoped<IUserProvider, UserProvider>();
+builder.Services.AddScoped<IBudgetService, BudgetService>();
+builder.Services.AddScoped<IBudgetEntriesService, BudgetEntriesService>();
 
 var app = builder.Build();
 
