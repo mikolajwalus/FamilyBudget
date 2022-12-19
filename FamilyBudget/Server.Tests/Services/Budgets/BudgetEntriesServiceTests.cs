@@ -203,6 +203,8 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var budget = await CreateBudget(context);
 
+                await AssignBudgetToUser(context, budget);
+
                 var existingEntry = await CreateEntryWithCategory(context, budget.Id);
 
                 var dto = new BudgetEntryForUpdateDto
@@ -226,6 +228,8 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 var budget = await CreateBudget(context);
+
+                await AssignBudgetToUser(context, budget);
 
                 var existingEntry = await CreateEntryWithCategory(context, budget.Id);
 
@@ -251,7 +255,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var budget = await CreateBudget(context);
 
-                var existingEntry = await CreateEntryWithCategory(context, budget.Id);\
+                await AssignBudgetToUser(context, budget);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);
 
                 var newCategory = (await CreateCategories(context)).First();
 
@@ -262,7 +268,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                     CategoryId = newCategory.Id
                 };
 
-                var expectedBudgetBalance = budget.Balance + dto.MoneyAmount;
+                var expectedBudgetBalance = budget.Balance - existingEntry.MoneyAmount + dto.MoneyAmount;
 
                 //Act
                 await sut.UpdateEntry(dto);
@@ -324,6 +330,8 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var budget = await CreateBudget(context);
 
                 var existingEntry = await CreateEntryWithCategory(context, budget.Id);
+
+                await AssignBudgetToUser(context, budget);
 
                 var expectedBudgetBalance = budget.Balance - existingEntry.MoneyAmount;
 

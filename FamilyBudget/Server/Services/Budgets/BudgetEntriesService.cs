@@ -22,17 +22,57 @@ namespace FamilyBudget.Server.Services.Budgets
 
         public async Task<BudgetEntryDto> CreateEntry(BudgetEntryForCreationDto dto)
         {
-            throw new NotImplementedException();
+            await ValidateForCreation(dto);
+
+            var budget = await _context.Budgets.FindAsync(dto.BudgetId);
+            var category = await _context.BudgetEntryCategories.FindAsync(dto.CategoryId);
+
+            budget.Balance += dto.MoneyAmount;
+
+            var budgetEntry = new BudgetEntry
+            {
+                MoneyAmount = dto.MoneyAmount,
+                BudgetEntryCategoryId = dto.CategoryId,
+                BudgetId = dto.BudgetId,
+            };
+
+            await _context.AddAsync(budgetEntry);
+            await _context.SaveChangesAsync();
+
+            return new BudgetEntryDto
+            {
+                Id = budgetEntry.Id,
+                MoneyAmount = budgetEntry.MoneyAmount,
+                CreatedAt = budgetEntry.CreatedAt,
+                LastUpdatedAt = budgetEntry.UpdatedAt,
+                CategoryName = category.Name,
+            };
         }
 
         public async Task UpdateEntry(BudgetEntryForUpdateDto dto)
         {
-            throw new NotImplementedException();
+            var entry = await GetEntryWithBudgetAndUser(dto.Id);
+
+            await ValidateForUpdate(dto, entry);
+
+            entry.Budget.Balance = entry.Budget.Balance - entry.MoneyAmount + dto.MoneyAmount;
+
+            entry.BudgetEntryCategoryId = dto.CategoryId;
+            entry.MoneyAmount = dto.MoneyAmount;
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteEntry(Guid id)
         {
-            throw new NotImplementedException();
+            var entry = await GetEntryWithBudgetAndUser(id);
+
+            ValidateForDelete(id, entry);
+
+            entry.Budget.Balance -= entry.MoneyAmount;
+
+            _context.Remove(entry);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<BudgetEntriesDto> GetBudgetEntries(BudgetEntriesRequestDto dto)
@@ -70,6 +110,66 @@ namespace FamilyBudget.Server.Services.Budgets
             };
         }
 
+        private async Task ValidateForCreation(BudgetEntryForCreationDto dto)
+        {
+            await CheckIfBudgetExistsAndIsAssignedToUser(_requestingUserId, dto.BudgetId);
+            await CheckIfCategoryExists(dto.CategoryId);
+            CheckIfMoneyAmountNotEqualsZero(dto.MoneyAmount);
+        }
+
+        private async Task ValidateForUpdate(BudgetEntryForUpdateDto dto, BudgetEntry entry)
+        {
+            CheckIfEntryExists(entry, dto.Id);
+            CheckIfBudgetAssignedToUser(entry.Budget, _requestingUserId);
+
+            if (dto.CategoryId != entry.BudgetEntryCategoryId)
+            {
+                await CheckIfCategoryExists(dto.CategoryId);
+            }
+
+            CheckIfMoneyAmountNotEqualsZero(dto.MoneyAmount);
+        }
+
+        private void ValidateForDelete(Guid entryId, BudgetEntry entry)
+        {
+            CheckIfEntryExists(entry, entryId);
+            CheckIfBudgetAssignedToUser(entry.Budget, _requestingUserId);
+        }
+
+        private async Task CheckIfCategoryExists(Guid categoryId)
+        {
+            var categoryExists = await _context.BudgetEntryCategories.AnyAsync(x => x.Id == categoryId);
+
+            if (!categoryExists)
+            {
+                throw new NotFoundException(ResponseMessages.GetCategoryNotExistsMessage(categoryId));
+            }
+        }
+
+        private void CheckIfMoneyAmountNotEqualsZero(decimal moneyAmount)
+        {
+            if (moneyAmount == 0)
+            {
+                throw new BadRequestException(ResponseMessages.BudgetEntryMoneyNotZero);
+            }
+        }
+
+        private void CheckIfEntryExists(BudgetEntry entry, Guid entryId)
+        {
+            if (entry is null)
+            {
+                throw new NotFoundException(ResponseMessages.GetBudgetEntryNotExistsMessage(entryId));
+            }
+        }
+
+        private void CheckIfBudgetAssignedToUser(Budget budget, string userId)
+        {
+            if (!budget.UsersAssignedToBudget.Any(x => x.Id == userId))
+            {
+                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budget.Id, userId));
+            }
+        }
+
         private async Task<PaginationResponseDto> GetPaginationResponse(BudgetEntriesRequestDto dto)
         {
             var itemsAmount = await _context.BudgetEntries.CountAsync();
@@ -97,6 +197,7 @@ namespace FamilyBudget.Server.Services.Budgets
             entriesQuery = entriesQuery
                 .Skip((dto.PaginationParams.PageNumber - 1) * dto.PaginationParams.PageSize)
                 .Take(dto.PaginationParams.PageSize);
+
             return entriesQuery;
         }
 
@@ -136,6 +237,14 @@ namespace FamilyBudget.Server.Services.Budgets
             {
                 throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
             }
+        }
+
+        private async Task<BudgetEntry> GetEntryWithBudgetAndUser(Guid entryId)
+        {
+            return await _context.BudgetEntries
+                .Include(x => x.Budget)
+                .ThenInclude(x => x.UsersAssignedToBudget.Where(u => u.Id == _requestingUserId))
+                .FirstOrDefaultAsync(x => x.Id == entryId);
         }
     }
 }
