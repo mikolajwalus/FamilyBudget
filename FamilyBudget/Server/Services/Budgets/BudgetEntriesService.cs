@@ -7,7 +7,7 @@ using FamilyBudget.Shared.Enums;
 using FamilyBudget.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 
-namespace FamilyBudget.Server.Services.Budget
+namespace FamilyBudget.Server.Services.Budgets
 {
     public class BudgetEntriesService
     {
@@ -114,7 +114,7 @@ namespace FamilyBudget.Server.Services.Budget
 
             if (budget is null)
             {
-                throw new BudgetNotExistException(budgetId);
+                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
             }
         }
     }

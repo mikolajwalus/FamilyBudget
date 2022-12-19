@@ -2,8 +2,7 @@
 using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Exceptions;
 using FamilyBudget.Server.Models;
-using FamilyBudget.Server.Services.Budget;
-using FamilyBudget.Shared.Budget;
+using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.BudgetEntries;
 using FamilyBudget.Shared.Enums;
 using FamilyBudget.Shared.Pagination;
@@ -35,7 +34,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<BudgetNotExistException>(async () => await sut.GetBudgetEntries(dto));
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudgetEntries(dto));
             }
         }
 
@@ -54,7 +53,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<BudgetNotExistException>(async () => await sut.GetBudgetEntries(dto));
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudgetEntries(dto));
             }
         }
 

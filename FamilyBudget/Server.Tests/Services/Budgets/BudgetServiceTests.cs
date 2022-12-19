@@ -2,7 +2,7 @@
 using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Exceptions;
 using FamilyBudget.Server.Models;
-using FamilyBudget.Server.Services.Budget;
+using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.Budget;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
@@ -86,7 +86,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and Assert
-                Assert.ThrowsAsync<UserNotExistException>(async () => await sut.GetUserBudgets());
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetUserBudgets());
             }
         }
 
@@ -138,7 +138,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<BudgetNotExistException>(async () => await sut.GetBudget(budget.Id));
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudget(budget.Id));
             }
         }
 
@@ -151,7 +151,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<BudgetNotExistException>(async () => await sut.GetBudget(Guid.NewGuid()));
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudget(Guid.NewGuid()));
             }
         }
 
@@ -188,6 +188,8 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var userIdsFromDb = budgetFromDb.UsersAssignedToBudget.Select(x => x.Id).ToList();
 
+                userIds.Add(UserId);
+
                 //Assert
                 Assert.AreEqual(dto.Name, result.Name);
                 Assert.AreEqual(dto.Name, budgetFromDb.Name);
@@ -219,7 +221,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<ArgumentException>(async () => await sut.CreateBudget(dto));
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.CreateBudget(dto));
             }
         }
 
@@ -240,7 +242,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<ArgumentException>(async () => await sut.CreateBudget(dto));
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.CreateBudget(dto));
             }
         }
 
@@ -259,7 +261,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<ArgumentException>(async () => await sut.CreateBudget(dto));
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.CreateBudget(dto));
             }
         }
 
@@ -273,15 +275,16 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                     .RuleFor(x => x.UserName, f => f.Name.FirstName())
                     .Generate(5);
 
+                var requestingUser = await GetMockedUser(context);
+
                 var budget = new Faker<Budget>()
                     .RuleFor(x => x.Name, f => f.Finance.AccountName())
                     .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
                     .Generate();
 
                 await context.AddAsync(budget);
                 await context.SaveChangesAsync();
-
-                await AddUserToBudget(context, budget);
 
                 var newName = budget.Name + "1111";
 
@@ -311,9 +314,12 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
             using (var context = GetDbContext())
             {
                 //Arrange
+                var requestingUser = await GetMockedUser(context);
+
                 var budget = new Faker<Budget>()
                     .RuleFor(x => x.Name, f => f.Finance.AccountName())
                     .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
                     .Generate();
 
                 var otherBudget = new Faker<Budget>()
@@ -325,8 +331,6 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 await context.AddAsync(otherBudget);
                 await context.SaveChangesAsync();
 
-                await AddUserToBudget(context, budget);
-
                 var dto = new BudgetForUpdateDto
                 {
                     Id = budget.Id,
@@ -336,7 +340,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<ArgumentException>(async () => await sut.UpdateBudget(dto));
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.UpdateBudget(dto));
             }
         }
 
@@ -357,7 +361,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetForUpdateDto
                 {
                     Id = budget.Id,
-                    Name = budget.Name,
+                    Name = budget.Name + "11",
                 };
 
                 var sut = GetSut(context);
@@ -392,7 +396,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<ArgumentException>(async () => await sut.CreateBudget(dto));
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.CreateBudget(dto));
             }
         }
 
@@ -427,12 +431,12 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act
-                var result = await sut.GetUsersAssignedToBudget(UserId);
+                var result = await sut.GetUsersAssignedToBudget(budget.Id);
 
                 var resultUserIds = result.Select(x => x.Id).ToList();
 
                 //Assert
-                Assert.That(result, Is.EquivalentTo(resultUserIds));
+                Assert.That(resultUserIds, Is.EquivalentTo(userIds));
             }
         }
 
@@ -453,12 +457,12 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.GetUsersAssignedToBudget(UserId));
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.GetUsersAssignedToBudget(budget.Id));
             }
         }
 
         [Test]
-        public async Task RemoveUserFromBudget_AddUserToBudgetPropperly()
+        public async Task AddUserToBudget_AddUserToBudgetPropperly()
         {
             using (var context = GetDbContext())
             {
@@ -483,7 +487,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                await sut.AddUserToBudget(user.Id);
+                await sut.AddUserToBudget(user.Id, budget.Id);
 
                 var budgetFromDb = await context.Budgets
                     .AsNoTracking()
@@ -518,7 +522,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.AddUserToBudget(user.Id));
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.AddUserToBudget(user.Id, budget.Id));
             }
         }
 
@@ -540,7 +544,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<UserNotExistException>(async () => await sut.AddUserToBudget("TestId"));
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.AddUserToBudget("TestId", budget.Id));
             }
         }
 
@@ -571,7 +575,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                await sut.RemoveUserFromBudget(user.Id);
+                await sut.RemoveUserFromBudget(user.Id, budget.Id);
 
                 var budgetFromDb = await context.Budgets
                     .AsNoTracking()
@@ -609,7 +613,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.RemoveUserFromBudget(user.Id));
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.RemoveUserFromBudget(user.Id, budget.Id));
             }
         }
 
@@ -622,10 +626,13 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var user = new Faker<ApplicationUser>()
                     .RuleFor(x => x.UserName, f => f.Name.FirstName())
                     .Generate();
+
+                var requestingUser = await GetMockedUser(context);
+
                 var budget = new Faker<Budget>()
                     .RuleFor(x => x.Name, f => f.Finance.AccountName())
                     .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { user })
+                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
                     .Generate();
 
                 await context.AddAsync(user);
@@ -635,7 +642,32 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<UserNotAssignedToBudgetException>(async () => await sut.RemoveUserFromBudget(user.Id));
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.RemoveUserFromBudget(user.Id, budget.Id));
+            }
+        }
+
+
+        [Test]
+        public async Task RemoveUserFromBudget_ThrowException_IfUserTryToRemoveHimself()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var requestingUser = await GetMockedUser(context);
+
+                var budget = new Faker<Budget>()
+                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
+                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
+                    .Generate();
+
+                await context.AddAsync(budget);
+                await context.SaveChangesAsync();
+
+                var sut = GetSut(context);
+
+                //Act and assert
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.RemoveUserFromBudget(requestingUser.Id, budget.Id));
             }
         }
 
@@ -656,19 +688,10 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<UserNotExistException>(async () => await sut.RemoveUserFromBudget("TestId"));
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.RemoveUserFromBudget("TestId", budget.Id));
             }
         }
 
         private BudgetService GetSut(ApplicationDbContext context) => new BudgetService(context, UserProvider);
-
-        async Task AddUserToBudget(ApplicationDbContext context, Budget budget)
-        {
-            var user = await GetMockedUser(context);
-
-            budget.UsersAssignedToBudget.Add(user);
-
-            await context.SaveChangesAsync();
-        }
     }
 }
