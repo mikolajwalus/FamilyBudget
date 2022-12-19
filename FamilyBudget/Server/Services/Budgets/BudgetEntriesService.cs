@@ -12,12 +12,27 @@ namespace FamilyBudget.Server.Services.Budgets
     public class BudgetEntriesService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IUserProvider _userProvider;
+        private readonly string _requestingUserId;
 
         public BudgetEntriesService(ApplicationDbContext context, IUserProvider userProvider)
         {
             _context = context;
-            _userProvider = userProvider;
+            _requestingUserId = userProvider.UserId;
+        }
+
+        public async Task<BudgetEntryDto> CreateEntry(BudgetEntryForCreationDto dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task CreateEntry(BudgetEntryForUpdateDto dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task DeleteEntry(Guid id)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<BudgetEntriesDto> GetBudgetEntries(BudgetEntriesRequestDto dto)
@@ -32,10 +47,9 @@ namespace FamilyBudget.Server.Services.Budgets
                 throw new ArgumentException(nameof(dto.PaginationParams.PageSize));
             }
 
-            var userId = _userProvider.UserId;
             var budgetId = dto.BudgetId;
 
-            await CheckIfBudgetExistsAndIsAssignedToUser(userId, budgetId);
+            await CheckIfBudgetExistsAndIsAssignedToUser(_requestingUserId, budgetId);
 
             var entriesQuery = _context.BudgetEntries
                 .Include(x => x.BudgetEntryCategory)
@@ -109,12 +123,18 @@ namespace FamilyBudget.Server.Services.Budgets
         private async Task CheckIfBudgetExistsAndIsAssignedToUser(string userId, Guid budgetId)
         {
             var budget = await _context.Budgets
-                .Where(x => x.UsersAssignedToBudget.Any(user => user.Id == userId) && x.Id == budgetId)
+                .Include(x => x.UsersAssignedToBudget.Where(x => x.Id == userId))
+                .Where(x => x.Id == budgetId)
                 .FirstOrDefaultAsync();
 
             if (budget is null)
             {
                 throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
+            }
+
+            if (budget.UsersAssignedToBudget.Count == 0)
+            {
+                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
             }
         }
     }

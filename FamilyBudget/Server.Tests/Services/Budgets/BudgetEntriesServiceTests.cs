@@ -34,7 +34,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudgetEntries(dto));
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.GetBudgetEntries(dto));
             }
         }
 
