@@ -93,7 +93,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var entries = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => f.Random.Decimal())
                     .RuleFor(x => x.BudgetEntryCategoryId, f => f.PickRandom(categories).Id)
-                    .RuleFor(x => x.UpdatedAt, f => f.Date.Recent(10))
+                    .RuleFor(x => x.BudgetId, budget.Id)
+                    .RuleFor(x => x.CreatedAt, f => f.Date.Recent(10))
+                    .RuleFor(x => x.UpdatedAt, (f, u) => u.CreatedAt.AddDays(1))
                     .Generate(entriesAmount);
 
                 await AddEntriesToDb(context, entries);
@@ -102,7 +104,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var dto = new BudgetEntriesRequestDto
                 {
-                    BudgetId = Guid.NewGuid(),
+                    BudgetId = budget.Id,
                     PaginationParams = GetPaginationParams(1, entriesAmount),
                 };
 
@@ -111,7 +113,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 //Assert
                 Assert.AreEqual(entriesAmount, result.Entries.Count);
-                Assert.That(result.Entries, Is.Ordered.By(nameof(BudgetEntryDto.CreatedAt)));
+                Assert.That(result.Entries, Is.Ordered.By(nameof(BudgetEntryDto.LastUpdatedAt)));
 
                 foreach (var entry in result.Entries)
                 {
@@ -139,11 +141,13 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var entriesWithPropperCategory = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => f.Random.Decimal())
+                    .RuleFor(x => x.BudgetId, budget.Id)
                     .RuleFor(x => x.BudgetEntryCategoryId, requestedCategory.Id)
                     .Generate(entriesToReturnAmount);
 
                 var entriesWithOtherCategory = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => f.Random.Decimal())
+                    .RuleFor(x => x.BudgetId, budget.Id)
                     .RuleFor(x => x.BudgetEntryCategoryId, f => f.PickRandom(otherCategories).Id)
                     .Generate(otherEntriesAmount);
 
@@ -154,7 +158,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var dto = new BudgetEntriesRequestDto
                 {
-                    BudgetId = Guid.NewGuid(),
+                    BudgetId = budget.Id,
                     PaginationParams = GetPaginationParams(1, entriesToReturnAmount),
                     CategoryId = requestedCategory.Id,
                 };
@@ -190,11 +194,13 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var incomeEntries = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => GetPositiveDecimal())
+                    .RuleFor(x => x.BudgetId, budget.Id)
                     .RuleFor(x => x.BudgetEntryCategoryId, categoryId)
                     .Generate(incomeEntriesAmount);
 
                 var expenseEntries = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => GetNegativeDecimal())
+                    .RuleFor(x => x.BudgetId, budget.Id)
                     .RuleFor(x => x.BudgetEntryCategoryId, categoryId)
                     .Generate(expenseEntriesAmount);
 
@@ -205,9 +211,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var dto = new BudgetEntriesRequestDto
                 {
-                    BudgetId = Guid.NewGuid(),
+                    BudgetId = budget.Id,
                     PaginationParams = GetPaginationParams(1, pageSize),
-                    EntriesType = BudgetEntriesType.OnlyIncomes
+                    EntriesType = entryType
                 };
 
                 //Act
@@ -242,7 +248,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var entries = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => f.Random.Decimal())
                     .RuleFor(x => x.BudgetEntryCategoryId, categoryId)
-                    .RuleFor(x => x.UpdatedAt, f => f.Date.Recent(15))
+                    .RuleFor(x => x.BudgetId, budget.Id)
+                    .RuleFor(x => x.CreatedAt, f => f.Date.Recent(15))
+                    .RuleFor(x => x.UpdatedAt, (f, u) => u.CreatedAt.AddDays(1))
                     .Generate(entriesAmount);
 
                 await AddEntriesToDb(context, entries);
@@ -257,7 +265,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var dto = new BudgetEntriesRequestDto
                 {
-                    BudgetId = Guid.NewGuid(),
+                    BudgetId = budget.Id,
                     PaginationParams = GetPaginationParams(pageNumber, pageSize),
                 };
 
@@ -269,7 +277,6 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 Assert.AreEqual(expectedPagesAmount, result.EntriesPagination.TotalPages);
                 Assert.AreEqual(pageNumber, result.EntriesPagination.CurrentPage);
                 Assert.AreEqual(pageSize, result.EntriesPagination.PageSize);
-                Assert.AreEqual(pageSize, result.Entries.Count);
 
                 for (int index = 0; index < entriesToReturn.Count; index++)
                 {
@@ -295,6 +302,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var entries = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => f.Random.Decimal())
                     .RuleFor(x => x.BudgetEntryCategoryId, categoryId)
+                    .RuleFor(x => x.BudgetId, budget.Id)
                     .RuleFor(x => x.UpdatedAt, f => f.Date.Recent(15))
                     .Generate(10);
 
@@ -304,7 +312,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var dto = new BudgetEntriesRequestDto
                 {
-                    BudgetId = Guid.NewGuid(),
+                    BudgetId = budget.Id,
                     PaginationParams = GetPaginationParams(2, 15),
                 };
 
@@ -317,7 +325,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
         }
 
         [Test]
-        public async Task GetBudgetEntries_ReturnEmptyList_WhenPageIsZero()
+        public async Task GetBudgetEntries_ThrowsException_WhenPageIsZero()
         {
             using (var context = GetDbContext(true))
             {
@@ -330,6 +338,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var entries = new Faker<BudgetEntry>()
                     .RuleFor(x => x.MoneyAmount, f => f.Random.Decimal())
                     .RuleFor(x => x.BudgetEntryCategoryId, categoryId)
+                    .RuleFor(x => x.BudgetId, budget.Id)
                     .RuleFor(x => x.UpdatedAt, f => f.Date.Recent(15))
                     .Generate(10);
 
@@ -339,15 +348,12 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 var dto = new BudgetEntriesRequestDto
                 {
-                    BudgetId = Guid.NewGuid(),
+                    BudgetId = budget.Id,
                     PaginationParams = GetPaginationParams(0, 15),
                 };
 
-                //Act
-                var result = await sut.GetBudgetEntries(dto);
-
-                //Assert
-                Assert.AreEqual(0, result.Entries.Count);
+                //Act and assert
+                Assert.ThrowsAsync<ArgumentException>(async () => await sut.GetBudgetEntries(dto));
             }
         }
 
@@ -426,8 +432,8 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
         private PaginationParamsDto GetPaginationParams(int pageNumber = 1, int pageSize = 1) => new PaginationParamsDto()
         {
-            PageNumber = 1,
-            PageSize = 1
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
     }
 }
