@@ -3,6 +3,7 @@
     public class BudgetEntryForCreationDto
     {
         public Guid BudgetId { get; set; }
-        public decimal Amount { get; set; }
+        public Guid CategoryId { get; set; }
+        public decimal MoneyAmount { get; set; }
     }
 }

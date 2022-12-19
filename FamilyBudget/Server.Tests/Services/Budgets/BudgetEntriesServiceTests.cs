@@ -6,6 +6,7 @@ using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.BudgetEntries;
 using FamilyBudget.Shared.Enums;
 using FamilyBudget.Shared.Pagination;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 
 namespace FamilyBudget.Server.Tests.Services.Budgets
@@ -13,6 +14,336 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
     [TestFixture]
     public class BudgetEntriesServiceTests : ServiceTest
     {
+        [Test]
+        public void CreateEntry_ThrowException_IfBudgetNotExists()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var dto = new BudgetEntryForCreationDto
+                {
+                    BudgetId = Guid.NewGuid(),
+                    MoneyAmount = 10,
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.CreateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task CreateEntry_ThrowException_IfUserIsNotAssignedToBudget()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var dto = new BudgetEntryForCreationDto
+                {
+                    BudgetId = budget.Id,
+                    MoneyAmount = 10,
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.CreateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task CreateEntry_ThrowException_IfMoneyAmountIsZero()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                await AssignBudgetToUser(context, budget);
+
+                var categoryId = (await CreateCategories(context)).First().Id;
+
+                var dto = new BudgetEntryForCreationDto
+                {
+                    BudgetId = budget.Id,
+                    MoneyAmount = 0,
+                    CategoryId = categoryId
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.CreateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task CreateEntry_ThrowException_IfCategoryDontExist()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                await AssignBudgetToUser(context, budget);
+
+                var dto = new BudgetEntryForCreationDto
+                {
+                    BudgetId = budget.Id,
+                    MoneyAmount = 0,
+                    CategoryId = Guid.NewGuid()
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.CreateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task CreateEntry_CreateEntryAndUpdatesBudgetBalance()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                await AssignBudgetToUser(context, budget);
+
+                var category = (await CreateCategories(context)).First();
+
+
+                var dto = new BudgetEntryForCreationDto
+                {
+                    BudgetId = budget.Id,
+                    MoneyAmount = 10,
+                    CategoryId = category.Id
+                };
+
+                var expectedBudgetBalance = budget.Balance + dto.MoneyAmount;
+
+                //Act
+                var result = await sut.CreateEntry(dto);
+
+                var entryFromDb = await context.BudgetEntries
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == result.Id);
+
+                var budgetFromDb = await context.Budgets
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == dto.BudgetId);
+
+                //Assert
+                Assert.AreEqual(expectedBudgetBalance, budgetFromDb.Balance);
+
+                Assert.AreEqual(dto.MoneyAmount, entryFromDb.MoneyAmount);
+                Assert.AreEqual(dto.CategoryId, entryFromDb.BudgetEntryCategoryId);
+                Assert.AreEqual(dto.BudgetId, entryFromDb.BudgetId);
+
+                Assert.AreEqual(dto.MoneyAmount, result.MoneyAmount);
+                Assert.AreEqual(category.Name, result.CategoryName);
+            }
+        }
+
+        [Test]
+        public void UpdateEntry_ThrowException_IfEntryNotExists()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var dto = new BudgetEntryForUpdateDto
+                {
+                    Id = Guid.NewGuid(),
+                    MoneyAmount = 10,
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.UpdateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task UpdateEntry_ThrowException_IfUserIsNotAssignedToBudget()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);
+
+                var dto = new BudgetEntryForUpdateDto
+                {
+                    Id = existingEntry.Id,
+                    MoneyAmount = 10,
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.UpdateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task UpdateEntry_ThrowException_IfMoneyAmountIsZero()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);
+
+                var dto = new BudgetEntryForUpdateDto
+                {
+                    Id = existingEntry.Id,
+                    MoneyAmount = 0,
+                    CategoryId = existingEntry.BudgetEntryCategoryId
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<BadRequestException>(async () => await sut.UpdateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task UpdateEntry_ThrowException_IfCategoryDontExist()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);
+
+                var dto = new BudgetEntryForUpdateDto
+                {
+                    Id = existingEntry.Id,
+                    MoneyAmount = 10,
+                    CategoryId = Guid.NewGuid()
+                };
+
+                //Act and assert
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.UpdateEntry(dto));
+            }
+        }
+
+        [Test]
+        public async Task UpdateEntry_UpdatesEntryAndBudgetBalance()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);\
+
+                var newCategory = (await CreateCategories(context)).First();
+
+                var dto = new BudgetEntryForUpdateDto
+                {
+                    Id = existingEntry.Id,
+                    MoneyAmount = 10,
+                    CategoryId = newCategory.Id
+                };
+
+                var expectedBudgetBalance = budget.Balance + dto.MoneyAmount;
+
+                //Act
+                await sut.UpdateEntry(dto);
+
+                var entryFromDb = await context.BudgetEntries
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == existingEntry.Id);
+
+                var budgetFromDb = await context.Budgets
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == budget.Id);
+
+                //Assert
+                Assert.AreEqual(expectedBudgetBalance, budgetFromDb.Balance);
+
+                Assert.AreEqual(dto.MoneyAmount, entryFromDb.MoneyAmount);
+                Assert.AreEqual(dto.CategoryId, entryFromDb.BudgetEntryCategoryId);
+            }
+        }
+
+        [Test]
+        public void DeleteEntry_ThrowException_IfEntryNotExists()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                //Act and assert
+                Assert.ThrowsAsync<NotFoundException>(async () => await sut.DeleteEntry(Guid.NewGuid()));
+            }
+        }
+
+        [Test]
+        public async Task DeleteEntry_ThrowException_IfUserIsNotAssignedToBudget()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);
+
+                //Act and assert
+                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.DeleteEntry(existingEntry.Id));
+            }
+        }
+
+        [Test]
+        public async Task DeleteEntry_DeletesEntryAndUpdateBudgetBalance()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                var budget = await CreateBudget(context);
+
+                var existingEntry = await CreateEntryWithCategory(context, budget.Id);
+
+                var expectedBudgetBalance = budget.Balance - existingEntry.MoneyAmount;
+
+                //Act
+                await sut.DeleteEntry(existingEntry.Id);
+
+                var entryExists = await context.BudgetEntries
+                    .AnyAsync(x => x.Id == existingEntry.Id);
+
+                var budgetFromDb = await context.Budgets
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == budget.Id);
+
+                //Assert
+                Assert.AreEqual(expectedBudgetBalance, budgetFromDb.Balance);
+                Assert.IsFalse(entryExists);
+            }
+        }
+
+
         [Test]
         public async Task GetBudgetEntries_ThrowException_IfExistsButIsNotUsers()
         {
@@ -411,6 +742,23 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
             budget.UsersAssignedToBudget.Add(user);
 
             await context.SaveChangesAsync();
+        }
+
+        private async Task<BudgetEntry> CreateEntryWithCategory(ApplicationDbContext context, Guid budgetId)
+        {
+            var categoryId = (await CreateCategories(context)).First().Id;
+
+            var entry = new BudgetEntry
+            {
+                BudgetId = budgetId,
+                BudgetEntryCategoryId = categoryId,
+                MoneyAmount = 100,
+            };
+
+            await context.AddAsync(entry);
+            await context.SaveChangesAsync();
+
+            return entry;
         }
 
         private async Task AddEntriesToDb(ApplicationDbContext context, List<BudgetEntry> entries)

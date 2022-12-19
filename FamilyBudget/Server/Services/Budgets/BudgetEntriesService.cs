@@ -25,7 +25,7 @@ namespace FamilyBudget.Server.Services.Budgets
             throw new NotImplementedException();
         }
 
-        public async Task CreateEntry(BudgetEntryForUpdateDto dto)
+        public async Task UpdateEntry(BudgetEntryForUpdateDto dto)
         {
             throw new NotImplementedException();
         }
