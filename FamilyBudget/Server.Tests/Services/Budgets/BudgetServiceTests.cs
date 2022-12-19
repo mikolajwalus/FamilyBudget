@@ -1,6 +1,8 @@
 ﻿using Bogus;
+using FamilyBudget.Server.Exceptions;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Budget;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace FamilyBudget.Server.Tests.Services.Budgets
@@ -64,6 +66,16 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
             //Assert
             Assert.AreEqual(0, result.Count);
+        }
+
+        [Test]
+        public void GetUserBudgets_ShouldThrowEWxceptionWhenUserNotExists()
+        {
+            //Arrange
+            UserProvider.UserId.Returns(Guid.NewGuid().ToString());
+
+            //Assert
+            Assert.ThrowsAsync<UserNotExistException>(async () => await _sut.GetUserBudgets());
         }
     }
 }

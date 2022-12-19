@@ -17,7 +17,6 @@ namespace FamilyBudget.Server.Services.Budget
 
         public async Task<List<UserBudgetDto>> GetUserBudgets()
         {
-            throw new NotImplementedException();
         }
 
         public async Task<BudgetDto> GetBudget(BudgetRequestDto dto)

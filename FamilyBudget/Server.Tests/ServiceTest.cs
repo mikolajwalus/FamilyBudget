@@ -33,7 +33,6 @@ namespace FamilyBudget.Server.Tests
             DbContext = new ApplicationDbContext(options, operationalStoreOptions);
 
             UserProvider = Substitute.For<IUserProvider>();
-            UserProvider.UserId.Returns(UserId);
         }
 
         public void Dispose()
@@ -52,6 +51,8 @@ namespace FamilyBudget.Server.Tests
 
             DbContext.Add(user);
             DbContext.SaveChanges();
+
+            UserProvider.UserId.Returns(UserId);
         }
 
         [TearDown]
