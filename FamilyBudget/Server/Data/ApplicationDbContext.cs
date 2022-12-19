@@ -1,4 +1,5 @@
 ﻿using Duende.IdentityServer.EntityFramework.Options;
+using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +11,14 @@ namespace FamilyBudget.Server.Data
 {
     public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
     {
+        private readonly DbContextConfiguration _contextOptions;
+
         public ApplicationDbContext(
             DbContextOptions options,
+            IOptions<DbContextConfiguration> contextOptions,
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
+            _contextOptions = contextOptions.Value;
         }
 
         public DbSet<Budget> Budgets { get; set; }
@@ -22,13 +27,21 @@ namespace FamilyBudget.Server.Data
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
-            UpdateTimestamps();
+            if (!_contextOptions.TurnOffUpdatingTimestamps)
+            {
+                UpdateTimestamps();
+            }
+
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
-            UpdateTimestamps();
+            if (!_contextOptions.TurnOffUpdatingTimestamps)
+            {
+                UpdateTimestamps();
+            }
+
             return base.SaveChanges(acceptAllChangesOnSuccess);
         }
 
@@ -40,16 +53,6 @@ namespace FamilyBudget.Server.Data
             {
                 object entity = entry.Entity;
 
-                if (entry.State == EntityState.Modified || entry.State == EntityState.Added)
-                {
-                    PropertyInfo updatedAtProperty = entity.GetType().GetProperty(nameof(BaseEntity.UpdatedAt));
-
-                    if (updatedAtProperty is not null)
-                    {
-                        updatedAtProperty.SetValue(entity, dateNow, null);
-                    }
-                }
-
                 if (entry.State == EntityState.Added)
                 {
                     PropertyInfo createdAtProperty = entity.GetType().GetProperty(nameof(BaseEntity.CreatedAt));
@@ -57,6 +60,16 @@ namespace FamilyBudget.Server.Data
                     if (createdAtProperty is not null)
                     {
                         createdAtProperty.SetValue(entity, dateNow, null);
+                    }
+                }
+
+                if (entry.State == EntityState.Modified || entry.State == EntityState.Added)
+                {
+                    PropertyInfo updatedAtProperty = entity.GetType().GetProperty(nameof(BaseEntity.UpdatedAt));
+
+                    if (updatedAtProperty is not null)
+                    {
+                        updatedAtProperty.SetValue(entity, dateNow, null);
                     }
                 }
             }

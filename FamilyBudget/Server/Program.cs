@@ -1,10 +1,14 @@
 using FamilyBudget.Server.Data;
+using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Add configuration
+builder.Services.Configure<DbContextConfiguration>(builder.Configuration.GetSection(DbContextConfiguration.SectionName));
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");

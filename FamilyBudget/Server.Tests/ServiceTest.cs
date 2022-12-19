@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using Duende.IdentityServer.EntityFramework.Options;
 using FamilyBudget.Server.Data;
+using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Identity;
 using Microsoft.Data.Sqlite;
@@ -65,13 +66,18 @@ namespace FamilyBudget.Server.Tests
             GC.Collect();
         }
 
-        protected ApplicationDbContext GetDbContext()
+        protected ApplicationDbContext GetDbContext(bool turnOffTimestamps = false)
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseSqlite(_connection)
                 .Options;
 
-            return new ApplicationDbContext(options, _operationalStoreOptions);
+            var dbContextOptions = Options.Create(new DbContextConfiguration()
+            {
+                TurnOffUpdatingTimestamps = turnOffTimestamps
+            });
+
+            return new ApplicationDbContext(options, dbContextOptions, _operationalStoreOptions);
         }
 
         protected async Task<ApplicationUser> GetMockedUser(ApplicationDbContext context) =>

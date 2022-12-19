@@ -44,9 +44,9 @@ namespace FamilyBudget.Server.Services.Budget
         {
             var userId = _userProvider.UserId;
 
-            var budget = _context.Budgets
+            var budget = await _context.Budgets
                 .Where(x => x.UsersAssignedToBudget.Any(user => user.Id == userId) && x.Id == id)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (budget is null)
             {
@@ -59,11 +59,6 @@ namespace FamilyBudget.Server.Services.Budget
                 Balance = budget.Balance,
                 Name = budget.Name,
             };
-        }
-
-        public async Task<BudgetEntriesDto> GetBudgetEntries(BudgetEntriesRequestDto dto)
-        {
-            throw new NotImplementedException();
         }
     }
 }
