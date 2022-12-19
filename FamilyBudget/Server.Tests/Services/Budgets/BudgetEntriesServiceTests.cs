@@ -4,6 +4,7 @@ using FamilyBudget.Server.Exceptions;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Budget;
 using FamilyBudget.Shared.Budget;
+using FamilyBudget.Shared.BudgetEntries;
 using FamilyBudget.Shared.Enums;
 using FamilyBudget.Shared.Pagination;
 using NUnit.Framework;

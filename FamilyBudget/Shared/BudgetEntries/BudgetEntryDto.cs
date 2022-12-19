@@ -1,4 +1,4 @@
-﻿namespace FamilyBudget.Shared.Budget
+﻿namespace FamilyBudget.Shared.BudgetEntries
 {
     public class BudgetEntryDto
     {

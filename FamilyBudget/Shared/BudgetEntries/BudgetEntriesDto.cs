@@ -1,6 +1,6 @@
 ﻿using FamilyBudget.Shared.Pagination;
 
-namespace FamilyBudget.Shared.Budget
+namespace FamilyBudget.Shared.BudgetEntries
 {
     public class BudgetEntriesDto
     {

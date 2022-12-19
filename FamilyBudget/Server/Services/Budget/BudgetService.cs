@@ -17,6 +17,31 @@ namespace FamilyBudget.Server.Services.Budget
             _userProvider = userProvider;
         }
 
+        public async Task AssignUserToBudget(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task UnassignUserToBudget(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<UserAssignedToBudgetDto> GetUsersAssignedToBudget(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<BudgetDto> CreateBudget(BudgetForCreationDto dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task UpdateBudgetName(BudgetForUpdateDto dto)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<List<BudgetDto>> GetUserBudgets()
         {
             var userId = _userProvider.UserId;

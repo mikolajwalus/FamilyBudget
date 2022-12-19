@@ -2,7 +2,7 @@
 using FamilyBudget.Shared.Pagination;
 using System.ComponentModel.DataAnnotations;
 
-namespace FamilyBudget.Shared.Budget
+namespace FamilyBudget.Shared.BudgetEntries
 {
     public class BudgetEntriesRequestDto
     {
