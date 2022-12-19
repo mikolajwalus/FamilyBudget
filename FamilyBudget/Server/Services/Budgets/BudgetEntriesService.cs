@@ -142,7 +142,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (!categoryExists)
             {
-                throw new NotFoundException(ResponseMessages.GetCategoryNotExistsMessage(categoryId));
+                throw new ResourceNotFoundException(ResponseMessages.GetCategoryNotExistsMessage(categoryId));
             }
         }
 
@@ -158,7 +158,7 @@ namespace FamilyBudget.Server.Services.Budgets
         {
             if (entry is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetEntryNotExistsMessage(entryId));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetEntryNotExistsMessage(entryId));
             }
         }
 
@@ -230,7 +230,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
             }
 
             if (budget.UsersAssignedToBudget.Count == 0)

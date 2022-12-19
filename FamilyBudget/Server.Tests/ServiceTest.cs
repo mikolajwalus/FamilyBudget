@@ -15,7 +15,6 @@ namespace FamilyBudget.Server.Tests
     public class ServiceTest
     {
         private const string InMemoryConnectionString = "DataSource=:memory:";
-        //private const string InMemoryConnectionString = "Filename=Aa.db";
         private SqliteConnection _connection;
         private readonly IOptions<OperationalStoreOptions> _operationalStoreOptions = Options.Create(new OperationalStoreOptions());
 

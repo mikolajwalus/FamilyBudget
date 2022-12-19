@@ -24,14 +24,14 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
             }
 
             var userToAdd = await _context.Users.FindAsync(userId);
 
             if (userToAdd is null)
             {
-                throw new NotFoundException(ResponseMessages.GetUserNotExistsMessage(userId));
+                throw new ResourceNotFoundException(ResponseMessages.GetUserNotExistsMessage(userId));
             }
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
@@ -57,14 +57,14 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
             }
 
             var userToRemove = await _context.Users.FindAsync(userId);
 
             if (userToRemove is null)
             {
-                throw new NotFoundException(ResponseMessages.GetUserNotExistsMessage(userId));
+                throw new ResourceNotFoundException(ResponseMessages.GetUserNotExistsMessage(userId));
             }
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
@@ -95,7 +95,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(id));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(id));
             }
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
@@ -158,7 +158,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(dto.Id));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(dto.Id));
             }
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
@@ -179,7 +179,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (user is null)
             {
-                throw new NotFoundException(ResponseMessages.GetUserNotExistsMessage(_requestingUserId));
+                throw new ResourceNotFoundException(ResponseMessages.GetUserNotExistsMessage(_requestingUserId));
             }
 
             return user.UserBudgets.Select(x => new BudgetDto()
@@ -199,7 +199,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget is null)
             {
-                throw new NotFoundException(ResponseMessages.GetBudgetNotExistsMessage(id));
+                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(id));
             }
 
             return new BudgetDto

@@ -29,7 +29,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.CreateEntry(dto));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.CreateEntry(dto));
             }
         }
 
@@ -100,7 +100,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.CreateEntry(dto));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.CreateEntry(dto));
             }
         }
 
@@ -166,7 +166,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.UpdateEntry(dto));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.UpdateEntry(dto));
             }
         }
 
@@ -241,7 +241,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.UpdateEntry(dto));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.UpdateEntry(dto));
             }
         }
 
@@ -298,7 +298,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.DeleteEntry(Guid.NewGuid()));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.DeleteEntry(Guid.NewGuid()));
             }
         }
 
@@ -392,7 +392,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 };
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudgetEntries(dto));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.GetBudgetEntries(dto));
             }
         }
 

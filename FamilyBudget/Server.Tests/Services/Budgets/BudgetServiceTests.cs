@@ -86,7 +86,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and Assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetUserBudgets());
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.GetUserBudgets());
             }
         }
 
@@ -138,7 +138,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudget(budget.Id));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.GetBudget(budget.Id));
             }
         }
 
@@ -151,7 +151,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.GetBudget(Guid.NewGuid()));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.GetBudget(Guid.NewGuid()));
             }
         }
 
@@ -544,7 +544,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.AddUserToBudget("TestId", budget.Id));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.AddUserToBudget("TestId", budget.Id));
             }
         }
 
@@ -688,7 +688,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var sut = GetSut(context);
 
                 //Act and assert
-                Assert.ThrowsAsync<NotFoundException>(async () => await sut.RemoveUserFromBudget("TestId", budget.Id));
+                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.RemoveUserFromBudget("TestId", budget.Id));
             }
         }
 

@@ -1,5 +1,6 @@
 using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Infractructure.Configuration;
+using FamilyBudget.Server.Infractructure.Middleware;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Identity;
 using Microsoft.AspNetCore.Authentication;
@@ -45,6 +46,8 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 
