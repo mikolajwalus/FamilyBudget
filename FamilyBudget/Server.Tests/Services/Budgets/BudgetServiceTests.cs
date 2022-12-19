@@ -74,7 +74,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
         }
 
         [Test]
-        public void GetUserBudgets_ShouldThrowEWxceptionWhenUserNotExists()
+        public void GetUserBudgets_ShouldThrowException_IfUserNotExists()
         {
             using (var context = GetDbContext())
             {
@@ -85,6 +85,71 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 //Act and Assert
                 Assert.ThrowsAsync<UserNotExistException>(async () => await sut.GetUserBudgets());
+            }
+        }
+
+        [Test]
+        public async Task GetBudget_ReturnUserBudget_IfExists()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var user = await GetMockedUser(context);
+
+                var budgetAssignedUsers = new List<ApplicationUser> { user };
+
+                var budget = new Faker<Budget>()
+                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
+                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .RuleFor(x => x.UsersAssignedToBudget, budgetAssignedUsers)
+                    .Generate();
+
+                await context.AddAsync(budget);
+                await context.SaveChangesAsync();
+
+                var sut = GetSut(context);
+
+                //Act 
+                var result = await sut.GetBudget(budget.Id);
+
+                //Assert
+                Assert.Equals(budget.Id, result.Id);
+                Assert.Equals(budget.Name, result.Name);
+                Assert.Equals(budget.Balance, result.Balance);
+            }
+        }
+
+        [Test]
+        public async Task GetBudget_ThrowException_IfExistsButIsNotUsers()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var budget = new Faker<Budget>()
+                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
+                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .Generate();
+
+                await context.AddAsync(budget);
+                await context.SaveChangesAsync();
+
+                var sut = GetSut(context);
+
+                //Act and assert
+                Assert.ThrowsAsync<BudgetNotExistException>(async () => await sut.GetBudget(budget.Id));
+            }
+        }
+
+        [Test]
+        public void GetBudget_ThrowException_IfNotExists()
+        {
+            using (var context = GetDbContext())
+            {
+                //Arrange
+                var sut = GetSut(context);
+
+                //Act and assert
+                Assert.ThrowsAsync<BudgetNotExistException>(async () => await sut.GetBudget(Guid.NewGuid()));
             }
         }
 

@@ -40,7 +40,7 @@ namespace FamilyBudget.Server.Services.Budget
             .ToList();
         }
 
-        public async Task<BudgetDto> GetBudgetDto(Guid id)
+        public async Task<BudgetDto> GetBudget(Guid id)
         {
             throw new NotImplementedException();
         }
