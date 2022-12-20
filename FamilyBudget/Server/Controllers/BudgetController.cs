@@ -38,6 +38,12 @@ namespace FamilyBudget.Server.Controllers
             return await _budgetService.GetBudget(budgetId);
         }
 
+        [HttpGet(BudgetApi.GetUsers)]
+        public async Task<List<UserForBudget>> GetUsers()
+        {
+            return await _budgetService.GetUsers();
+        }
+
         [HttpPost(BudgetApi.CreateBudget)]
         public async Task<BudgetDto> CreateBudget([FromBody] BudgetForCreationDto dto)
         {
@@ -55,32 +61,11 @@ namespace FamilyBudget.Server.Controllers
         [HttpGet(BudgetApi.GetUserBudgets)]
         public async Task<List<BudgetDto>> GetUserBudgets()
         {
-            //return await _budgetService.GetUserBudgets();
-            return new List<BudgetDto>
-            {
-                new BudgetDto
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "First",
-                    Balance = 10
-                },
-                new BudgetDto
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Second",
-                    Balance = 0
-                },
-                new BudgetDto
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Third",
-                    Balance = -10
-                },
-            };
+            return await _budgetService.GetUserBudgets();
         }
 
         [HttpGet(BudgetApi.GetUsersAssignedToBudget)]
-        public async Task<List<UserAssignedToBudgetDto>> GetUsersAssignedBudget([FromRoute] Guid budgetId)
+        public async Task<List<UserForBudget>> GetUsersAssignedBudget([FromRoute] Guid budgetId)
         {
             return await _budgetService.GetUsersAssignedToBudget(budgetId);
         }

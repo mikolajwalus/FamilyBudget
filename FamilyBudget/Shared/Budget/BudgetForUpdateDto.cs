@@ -8,5 +8,6 @@ namespace FamilyBudget.Shared.Budget
 
         [Required(AllowEmptyStrings = false)]
         public string Name { get; set; }
+        public List<string> AssignedUsers { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace FamilyBudget.Shared.Budget
 {
-    public class UserAssignedToBudgetDto
+    public class UserForBudget
     {
         public string Id { get; set; }
         public string Username { get; set; }

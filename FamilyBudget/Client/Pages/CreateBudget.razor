@@ -1,0 +1,77 @@
+﻿@page "/CreateBudget"
+@using FamilyBudget.Client.Services;
+@using FamilyBudget.Shared.Budget;
+@inject IBudgetService BudgetService;
+@inject NotificationService NotificationService;
+@inject IUserProvider IdentityProvider;
+
+
+<PageTitle>Create budget</PageTitle>
+
+<h3>Create budget</h3>
+
+
+<div class="container">
+    <RadzenTemplateForm Data="@Dto" Submit="@(async (BudgetForCreationDto args) => { await Submit(args); })">
+
+        <div>
+            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Users to assign</RadzenText>
+            <RadzenDropDown AllowClear="false" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            @bind-Value=@Dto.AssignedUsers Multiple="true" Placeholder="Select..." Data=@Users TextProperty="Username"
+                            ValueProperty="Id" DisabledProperty="Disabled" Class="w-100" />
+        </div>
+
+        <div>
+            <div>
+                <RadzenLabel Component="Name" Text="Name" />
+            </div>
+            <div>
+                <RadzenTextBox Name="Name" @bind-Value=@Dto.Name />
+            </div>
+            <div>
+                <RadzenRequiredValidator Component="Name" Text="First name is required!" />
+            </div>
+        </div>
+
+        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" />
+    </RadzenTemplateForm>
+</div>
+
+@code {
+    List<UserForDropdown> Users { get; set; } = new List<UserForDropdown>();
+
+    BudgetForCreationDto Dto { get; set; } = new BudgetForCreationDto { AssignedUsers = new List<string>() };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await IdentityProvider.GetUserId();
+        
+        Users = (await BudgetService.GetUsers())
+            .Select(x => new UserForDropdown
+            {
+                Id = x.Id,
+                Username = x.Username,
+                Disabled = x.Id == userId
+            })
+            .ToList();
+
+        Dto.AssignedUsers.Add(userId);
+    }
+
+    async Task Submit(BudgetForCreationDto dto)
+    {
+        var result = await BudgetService.CreateBudget(dto);
+
+        NotificationService
+            .Notify(new NotificationMessage
+            {
+                Summary = "Succesfully created budget",
+                Severity = NotificationSeverity.Success
+            });
+    }
+
+    public class UserForDropdown : UserForBudget
+    {
+        public bool Disabled { get; set; }
+    }
+}

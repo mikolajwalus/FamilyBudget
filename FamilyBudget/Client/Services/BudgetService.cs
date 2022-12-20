@@ -41,11 +41,16 @@ namespace FamilyBudget.Client.Services
             return await _httpClient.GetFromJsonAsync<List<BudgetDto>>(BudgetApi.GetUserBudgets);
         }
 
-        public async Task<List<UserAssignedToBudgetDto>> GetUsersAssignedToBudget(Guid id)
+        public async Task<List<UserForBudget>> GetUsers()
+        {
+            return await _httpClient.GetFromJsonAsync<List<UserForBudget>>(BudgetApi.GetUsers);
+        }
+
+        public async Task<List<UserForBudget>> GetUsersAssignedToBudget(Guid id)
         {
             var uri = BudgetApi.GetUsersAssignedToBudget.Replace(BudgetApi.BudgetIdRouteParam, id.ToString());
 
-            return await _httpClient.GetFromJsonAsync<List<UserAssignedToBudgetDto>>(uri);
+            return await _httpClient.GetFromJsonAsync<List<UserForBudget>>(uri);
         }
 
         public async Task RemoveUserFromBudget(string userId, Guid budgetId)

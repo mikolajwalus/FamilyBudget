@@ -166,7 +166,7 @@ namespace FamilyBudget.Server.Services.Budgets
         {
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == userId))
             {
-                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budget.Id, userId));
+                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(budget.Id, userId));
             }
         }
 
@@ -235,7 +235,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (budget.UsersAssignedToBudget.Count == 0)
             {
-                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
+                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
             }
         }
 

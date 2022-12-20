@@ -18,6 +18,17 @@ namespace FamilyBudget.Server.Services.Budgets
             _requestingUserId = userProvider.UserId;
         }
 
+        public async Task<List<UserForBudget>> GetUsers()
+        {
+            return await _context.Users.AsNoTracking()
+                .Select(x => new UserForBudget
+                {
+                    Id = x.Id,
+                    Username = x.UserName,
+                })
+                .ToListAsync();
+        }
+
         public async Task AddUserToBudget(string userId, Guid budgetId)
         {
             var budget = await GetBudgetWithUsers(budgetId);
@@ -36,7 +47,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
             {
-                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
+                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
             }
 
 
@@ -69,7 +80,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
             {
-                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
+                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
             }
 
             if (userId == _requestingUserId)
@@ -79,7 +90,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == userId))
             {
-                var errorMessage = ResponseMessages.GetGetUserNotAssignedToBudgetMessage(budgetId, userId);
+                var errorMessage = ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, userId);
 
                 throw new BadRequestException(errorMessage);
             }
@@ -89,7 +100,7 @@ namespace FamilyBudget.Server.Services.Budgets
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<UserAssignedToBudgetDto>> GetUsersAssignedToBudget(Guid id)
+        public async Task<List<UserForBudget>> GetUsersAssignedToBudget(Guid id)
         {
             var budget = await GetBudgetWithUsers(id);
 
@@ -100,11 +111,11 @@ namespace FamilyBudget.Server.Services.Budgets
 
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
             {
-                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(id, _requestingUserId));
+                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(id, _requestingUserId));
             }
 
             return budget.UsersAssignedToBudget
-                .Select(x => new UserAssignedToBudgetDto
+                .Select(x => new UserForBudget
                 {
                     Id = x.Id,
                     Username = x.UserName
@@ -161,9 +172,30 @@ namespace FamilyBudget.Server.Services.Budgets
                 throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(dto.Id));
             }
 
+
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
             {
-                throw new UnauthorizedException(ResponseMessages.GetGetUserNotAssignedToBudgetMessage(dto.Id, _requestingUserId));
+                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(dto.Id, _requestingUserId));
+            }
+
+            var users = await _context.Users
+                .Where(x => dto.AssignedUsers.Contains(x.Id) || x.UserBudgets.Any(b => b.Id == dto.Id))
+                .ToDictionaryAsync(x => x.Id);
+
+            var usersToRemove = budget.UsersAssignedToBudget.Where(x => !dto.AssignedUsers.Contains(x.Id));
+
+            var usersIdsToAdd = dto
+                .AssignedUsers
+                .Where(x => budget.UsersAssignedToBudget.Any(u => u.Id == x));
+
+            foreach (var userToRemove in usersToRemove)
+            {
+                budget.UsersAssignedToBudget.Remove(userToRemove);
+            }
+
+            foreach (var usersIdToAdd in usersIdsToAdd)
+            {
+                budget.UsersAssignedToBudget.Remove(users[usersIdToAdd]);
             }
 
             budget.Name = dto.Name;

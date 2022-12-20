@@ -32,7 +32,7 @@
             return string.Format(BudgetWithNameAleardyExists, name);
         }
 
-        public static string GetGetUserNotAssignedToBudgetMessage(Guid budgetId, string userId)
+        public static string GetUserNotAssignedToBudgetMessage(Guid budgetId, string userId)
         {
             return string.Format(UserNotAssignedToBudget, userId, budgetId);
         }
