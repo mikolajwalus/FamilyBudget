@@ -9,6 +9,6 @@ namespace FamilyBudget.Client.Services
         Task<List<UserForBudget>> GetUsers();
         Task<List<BudgetDto>> GetUserBudgets();
         Task<List<UserForBudget>> GetUsersAssignedToBudget(Guid id);
-        Task UpdateBudget(BudgetForUpdateDto dto);
+        Task<bool> UpdateBudget(BudgetForUpdateDto dto);
     }
 }

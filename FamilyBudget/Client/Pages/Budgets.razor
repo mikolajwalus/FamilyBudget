@@ -1,8 +1,8 @@
-﻿@page "/Budgets"
+﻿@page "/ManageBudgets"
 
-<PageTitle>Budgets</PageTitle>
+<PageTitle>Manage budgets</PageTitle>
 
-<h3>Budgets</h3>
+<h3>Manage budgets</h3>
 
 @if(UserBudgets is null)
 {
@@ -25,8 +25,7 @@ else
                     <td>@budget.Name</td>
                     <td class="@((budget.Balance > 0 ? "text-success" : budget.Balance < 0 ? "text-danger" : "text-secondary"))">@budget.Balance</td>
                     <td>
-                        @*<button class="btn btn-primary" @onclick="(() => ShowHero(hero.Id))"><i class="oi oi-pencil"></i></button>*@
-                        <button class="btn btn-primary"><i class="oi oi-pencil"></i></button>
+                        <button class="btn btn-primary" @onclick="(() => Edit(budget.Id))"><i class="oi oi-pencil"></i></button>
                     </td>
                 </tr>
             }
@@ -34,5 +33,4 @@ else
     </table>
 }
 
-<button class="btn btn-primary">Add budget</button>
-@*<button class="btn btn-primary" @onclick="CreateNewHero">Create New Hero</button>*@
+<button class="btn btn-primary" @onclick="Add">Add budget</button>

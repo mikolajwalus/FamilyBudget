@@ -20,13 +20,8 @@
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Budgets">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Budgets
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="CreateBudget">
-                <span aria-hidden="true"></span> Create budget
+            <NavLink class="nav-link" href="ManageBudgets">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Manage user budgets
             </NavLink>
         </div>
     </nav>
@@ -35,7 +30,7 @@
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {

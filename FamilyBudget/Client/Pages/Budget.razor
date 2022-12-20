@@ -1,0 +1,107 @@
+﻿@page "/Budget"
+@page "/Budget/{id:guid}"
+@using FamilyBudget.Client.Services;
+@using FamilyBudget.Shared.Budget;
+@inject IBudgetService BudgetService;
+@inject NotificationService NotificationService;
+@inject NavigationManager NavigationManager;
+
+
+@if (Id is null)
+{
+    <PageTitle>Create a new Budget</PageTitle>
+    <h3>Create a new Budget</h3>
+}
+else
+{
+    <PageTitle>Edit @Dto.Name</PageTitle>
+    <h3>Edit <strong>@Dto.Name</strong></h3>
+}
+
+
+<div class="container-fluid px-3">
+    <RadzenTemplateForm Data="@Dto" Submit="@(async (BudgetForCreationDto args) => { await Submit(args); })">
+
+        <div class="row py-3">
+            <RadzenLabel Component="Users" Text="Users to assign" />
+            <RadzenDropDown Name="Users" AllowClear="false" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            @bind-Value=@Dto.AssignedUsers Multiple="true" Placeholder="Select..." Data=@Users TextProperty="Username"
+                            ValueProperty="Id" Class="w-100" />
+        </div>
+
+        <div class="row py-3 w-25">
+            <RadzenLabel Component="Name" Text="Name" />
+            <RadzenTextBox Name="Name" @bind-Value=@Dto.Name />
+            <RadzenRequiredValidator Component="Name" Text="First name is required!" />
+        </div>
+
+        <div class="row py-3">
+            <RadzenButton style="width: fit-content" ButtonType="ButtonType.Submit" Icon="save" Text="Save" />
+        </div>
+
+    </RadzenTemplateForm>
+</div>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    List<UserForBudget> Users { get; set; } = new List<UserForBudget>();
+
+    BudgetForCreationDto Dto = new BudgetForCreationDto{ AssignedUsers = new List<string>() };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await BudgetService.GetUsers();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is not null)
+        {
+            var budget = await BudgetService.GetBudget(Id.Value);
+
+            Dto.Name = budget.Name;
+            Dto.AssignedUsers = budget.Users.Select(x => x.Id).ToList();
+        }
+    }
+
+    async Task Submit(BudgetForCreationDto dto)
+    {
+        if(Id is null)
+        {
+            await CreateBudget(dto);
+        }
+        else
+        {
+            await UpdateBudget(dto);
+        }
+    }
+
+    async Task CreateBudget(BudgetForCreationDto dto)
+    {
+        var result = await BudgetService.CreateBudget(dto);
+
+        if (result is not null)
+        {
+            NavigationManager.NavigateTo("/ManageBudgets");
+        }
+    }
+
+    async Task UpdateBudget(BudgetForCreationDto dto)
+    {
+        var updateDto = new BudgetForUpdateDto
+        {
+            Id = Id.Value,
+            Name = dto.Name,
+            AssignedUsers = dto.AssignedUsers
+        };
+
+        var result = await BudgetService.UpdateBudget(updateDto);
+
+        if (result)
+        {
+            NavigationManager.NavigateTo("/ManageBudgets");
+        }
+    }
+}
