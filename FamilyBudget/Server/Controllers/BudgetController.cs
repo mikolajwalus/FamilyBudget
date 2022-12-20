@@ -1,10 +1,12 @@
 ﻿using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.ApiRoutes;
 using FamilyBudget.Shared.Budget;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FamilyBudget.Server.Controllers
 {
+    [Authorize]
     public class BudgetController : ControllerBase
     {
         private readonly IBudgetService _budgetService;
@@ -43,7 +45,7 @@ namespace FamilyBudget.Server.Controllers
         }
 
         [HttpPut(BudgetApi.UpdateBudget)]
-        public async Task<IActionResult> CreateBudget([FromBody] BudgetForUpdateDto dto)
+        public async Task<IActionResult> UpdateBudget([FromBody] BudgetForUpdateDto dto)
         {
             await _budgetService.UpdateBudget(dto);
 
@@ -53,7 +55,28 @@ namespace FamilyBudget.Server.Controllers
         [HttpGet(BudgetApi.GetUserBudgets)]
         public async Task<List<BudgetDto>> GetUserBudgets()
         {
-            return await _budgetService.GetUserBudgets();
+            //return await _budgetService.GetUserBudgets();
+            return new List<BudgetDto>
+            {
+                new BudgetDto
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "First",
+                    Balance = 10
+                },
+                new BudgetDto
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Second",
+                    Balance = 0
+                },
+                new BudgetDto
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Third",
+                    Balance = -10
+                },
+            };
         }
 
         [HttpGet(BudgetApi.GetUsersAssignedToBudget)]

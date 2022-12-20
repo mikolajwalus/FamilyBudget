@@ -1,4 +1,5 @@
 using FamilyBudget.Client;
+using FamilyBudget.Client.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -14,5 +15,8 @@ builder.Services.AddHttpClient("FamilyBudget.ServerAPI", client => client.BaseAd
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("FamilyBudget.ServerAPI"));
 
 builder.Services.AddApiAuthorization();
+
+//Add services
+builder.Services.AddScoped<IBudgetService, BudgetService>();
 
 await builder.Build().RunAsync();

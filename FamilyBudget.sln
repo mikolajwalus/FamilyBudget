@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamilyBudget.Server", "FamilyBudget\Server\FamilyBudget.Server.csproj", "{277E5E1C-8C2D-493E-B84C-3C9F63E9A49A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilyBudget.Server", "FamilyBudget\Server\FamilyBudget.Server.csproj", "{277E5E1C-8C2D-493E-B84C-3C9F63E9A49A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamilyBudget.Client", "FamilyBudget\Client\FamilyBudget.Client.csproj", "{88D50CE2-6289-4DA5-B433-41D3FC17275D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilyBudget.Client", "FamilyBudget\Client\FamilyBudget.Client.csproj", "{88D50CE2-6289-4DA5-B433-41D3FC17275D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamilyBudget.Shared", "FamilyBudget\Shared\FamilyBudget.Shared.csproj", "{BB6050F2-4972-4DC3-BE82-5907CF1F3BD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilyBudget.Shared", "FamilyBudget\Shared\FamilyBudget.Shared.csproj", "{BB6050F2-4972-4DC3-BE82-5907CF1F3BD0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilyBudget.Server.Tests", "FamilyBudget\Server.Tests\FamilyBudget.Server.Tests.csproj", "{85CE739F-395D-40DE-BE70-4F97984A75DA}"
 EndProject

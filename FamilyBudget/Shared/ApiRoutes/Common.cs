@@ -2,6 +2,6 @@
 {
     public static class Common
     {
-        public const string MainApiRoute = "api/"
+        public const string MainApiRoute = "api";
     }
 }
