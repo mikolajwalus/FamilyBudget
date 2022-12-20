@@ -616,6 +616,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 Assert.AreEqual(expectedPagesAmount, result.EntriesPagination.TotalPages);
                 Assert.AreEqual(pageNumber, result.EntriesPagination.CurrentPage);
                 Assert.AreEqual(pageSize, result.EntriesPagination.PageSize);
+                Assert.AreEqual(entriesAmount, result.EntriesPagination.TotalCount);
 
                 for (int index = 0; index < entriesToReturn.Count; index++)
                 {

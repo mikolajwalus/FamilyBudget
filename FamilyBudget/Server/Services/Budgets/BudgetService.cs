@@ -144,7 +144,7 @@ namespace FamilyBudget.Server.Services.Budgets
         public async Task<BudgetDto> GetBudget(Guid id)
         {
             var budget = await _context.Budgets
-                .Include(x => x.UsersAssignedToBudget.Where(u => u.Id == _requestingUserId))
+                .Include(x => x.UsersAssignedToBudget)
                 .Where(x => x.UsersAssignedToBudget.Any(user => user.Id == _requestingUserId) && x.Id == id)
                 .FirstOrDefaultAsync();
 
@@ -158,6 +158,12 @@ namespace FamilyBudget.Server.Services.Budgets
                 Id = id,
                 Balance = budget.Balance,
                 Name = budget.Name,
+                Users = budget.UsersAssignedToBudget.Where(x => x.Id != _requestingUserId).Select(x => new UserForBudget
+                {
+                    Id = x.Id,
+                    Username = x.UserName
+                })
+                .ToList()
             };
         }
 

@@ -48,6 +48,8 @@ else
 
     List<UserForBudget> Users { get; set; } = new List<UserForBudget>();
 
+    List<string> AssignedUsers = new List<string>();
+
     BudgetForCreationDto Dto = new BudgetForCreationDto{ AssignedUsers = new List<string>() };
 
     protected override async Task OnInitializedAsync()
