@@ -266,15 +266,11 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
         }
 
         [Test]
-        public async Task UpdateBudget_UpdatesBudgetPropperly()
+        public async Task UpdateBudget_UpdatesBudgetName()
         {
             using (var context = GetDbContext())
             {
                 //Arrange
-                var users = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
-                    .Generate(5);
-
                 var requestingUser = await GetMockedUser(context);
 
                 var budget = new Faker<Budget>()
@@ -305,6 +301,78 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 //Assert
                 Assert.AreEqual(newName, budgetFromDb.Name);
+            }
+        }
+
+        [Test]
+        public async Task UpdateBudget_UpdatesAssignedUsers()
+        {
+            using (var context = GetDbContext())
+            {
+                var assignedUsersToRemoveAmount = 20;
+                var assignedUsersToKeepAmount = 5;
+                var usersToAssignAmount = 10;
+
+                //Arrange
+                var assignedUsersToRemove = new Faker<ApplicationUser>()
+                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
+                    .Generate(assignedUsersToRemoveAmount);
+
+                var assignedUsersToKeep = new Faker<ApplicationUser>()
+                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
+                    .Generate(assignedUsersToKeepAmount);
+
+                var usersToAssign = new Faker<ApplicationUser>()
+                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
+                    .Generate(usersToAssignAmount);
+
+                await context.AddRangeAsync(assignedUsersToRemove);
+                await context.AddRangeAsync(assignedUsersToKeep);
+                await context.AddRangeAsync(usersToAssign);
+                await context.SaveChangesAsync();
+
+                var requestingUser = await GetMockedUser(context);
+
+                var usersAssignedToBudget = new List<ApplicationUser> { requestingUser };
+                usersAssignedToBudget.AddRange(assignedUsersToKeep);
+                usersAssignedToBudget.AddRange(assignedUsersToRemove);
+
+                var budget = new Faker<Budget>()
+                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
+                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
+                    .RuleFor(x => x.UsersAssignedToBudget, usersAssignedToBudget)
+                    .Generate();
+
+                await context.AddAsync(budget);
+                await context.SaveChangesAsync();
+
+                var newAssignedUsers = usersToAssign.Select(x => x.Id).ToList();
+                newAssignedUsers.AddRange(assignedUsersToKeep.Select(x => x.Id));
+
+
+                var dto = new BudgetForUpdateDto
+                {
+                    Id = budget.Id,
+                    Name = budget.Name,
+                    AssignedUsers = newAssignedUsers,
+                };
+
+                var sut = GetSut(context);
+
+                //Act
+                await sut.UpdateBudget(dto);
+
+                var budgetFromDb = await context.Budgets
+                    .AsNoTracking()
+                    .Include(x => x.UsersAssignedToBudget)
+                    .FirstOrDefaultAsync(x => x.Id == budget.Id);
+
+                var assignedUserIdsFromDb = budgetFromDb.UsersAssignedToBudget.Select(x => x.Id).ToList();
+
+                var expectedAssignedUserIds = newAssignedUsers.Append(requestingUser.Id).ToList();
+                //Assert
+                Assert.That(assignedUserIdsFromDb.Count, Is.EqualTo(expectedAssignedUserIds.Count));
+                Assert.That(assignedUserIdsFromDb, Is.EquivalentTo(expectedAssignedUserIds));
             }
         }
 
@@ -461,236 +529,236 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
             }
         }
 
-        [Test]
-        public async Task AddUserToBudget_AddUserToBudgetPropperly()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var user = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
-                    .Generate();
+        //[Test]
+        //public async Task AddUserToBudget_AddUserToBudgetPropperly()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var user = new Faker<ApplicationUser>()
+        //            .RuleFor(x => x.UserName, f => f.Name.FirstName())
+        //            .Generate();
 
-                var requestingUser = await GetMockedUser(context);
+        //        var requestingUser = await GetMockedUser(context);
 
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .RuleFor(x => x.UsersAssignedToBudget, f => new List<ApplicationUser> { requestingUser })
-                    .Generate();
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .RuleFor(x => x.UsersAssignedToBudget, f => new List<ApplicationUser> { requestingUser })
+        //            .Generate();
 
-                await context.AddAsync(user);
-                await context.AddAsync(budget);
+        //        await context.AddAsync(user);
+        //        await context.AddAsync(budget);
 
-                await context.SaveChangesAsync();
+        //        await context.SaveChangesAsync();
 
-                var sut = GetSut(context);
+        //        var sut = GetSut(context);
 
-                //Act and assert
-                await sut.AddUserToBudget(user.Id, budget.Id);
+        //        //Act and assert
+        //        await sut.AddUserToBudget(user.Id, budget.Id);
 
-                var budgetFromDb = await context.Budgets
-                    .AsNoTracking()
-                    .Include(x => x.UsersAssignedToBudget)
-                    .FirstOrDefaultAsync(x => x.Id == budget.Id);
+        //        var budgetFromDb = await context.Budgets
+        //            .AsNoTracking()
+        //            .Include(x => x.UsersAssignedToBudget)
+        //            .FirstOrDefaultAsync(x => x.Id == budget.Id);
 
-                //Assert
-                Assert.That(budgetFromDb.UsersAssignedToBudget.Any(x => x.Id == user.Id));
-            }
-        }
+        //        //Assert
+        //        Assert.That(budgetFromDb.UsersAssignedToBudget.Any(x => x.Id == user.Id));
+        //    }
+        //}
 
-        [Test]
-        public async Task AddUserToBudget_ThrowException_IfRequestingUserNotAssignedToBudget()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .Generate();
+        //[Test]
+        //public async Task AddUserToBudget_ThrowException_IfRequestingUserNotAssignedToBudget()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .Generate();
 
-                var user = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
-                    .Generate();
+        //        var user = new Faker<ApplicationUser>()
+        //            .RuleFor(x => x.UserName, f => f.Name.FirstName())
+        //            .Generate();
 
-                await context.AddAsync(user);
-                await context.AddAsync(budget);
+        //        await context.AddAsync(user);
+        //        await context.AddAsync(budget);
 
-                await context.SaveChangesAsync();
+        //        await context.SaveChangesAsync();
 
-                var sut = GetSut(context);
+        //        var sut = GetSut(context);
 
-                //Act and assert
-                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.AddUserToBudget(user.Id, budget.Id));
-            }
-        }
+        //        //Act and assert
+        //        Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.AddUserToBudget(user.Id, budget.Id));
+        //    }
+        //}
 
-        [Test]
-        public async Task AddUserToBudget_ThrowException_IfUserNotExists()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .Generate();
+        //[Test]
+        //public async Task AddUserToBudget_ThrowException_IfUserNotExists()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .Generate();
 
-                await context.AddAsync(budget);
+        //        await context.AddAsync(budget);
 
-                await context.SaveChangesAsync();
+        //        await context.SaveChangesAsync();
 
-                var sut = GetSut(context);
+        //        var sut = GetSut(context);
 
-                //Act and assert
-                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.AddUserToBudget("TestId", budget.Id));
-            }
-        }
+        //        //Act and assert
+        //        Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.AddUserToBudget("TestId", budget.Id));
+        //    }
+        //}
 
-        [Test]
-        public async Task RemoveUserFromBudget_RemoveUserFromBudgetPropperly()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var user = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
-                    .Generate();
+        //[Test]
+        //public async Task RemoveUserFromBudget_RemoveUserFromBudgetPropperly()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var user = new Faker<ApplicationUser>()
+        //            .RuleFor(x => x.UserName, f => f.Name.FirstName())
+        //            .Generate();
 
-                await context.AddAsync(user);
-                await context.SaveChangesAsync();
+        //        await context.AddAsync(user);
+        //        await context.SaveChangesAsync();
 
-                var requestingUser = await GetMockedUser(context);
+        //        var requestingUser = await GetMockedUser(context);
 
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .RuleFor(x => x.UsersAssignedToBudget, f => new List<ApplicationUser> { requestingUser, user })
-                    .Generate();
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .RuleFor(x => x.UsersAssignedToBudget, f => new List<ApplicationUser> { requestingUser, user })
+        //            .Generate();
 
-                await context.AddAsync(budget);
-                await context.SaveChangesAsync();
+        //        await context.AddAsync(budget);
+        //        await context.SaveChangesAsync();
 
-                var sut = GetSut(context);
+        //        var sut = GetSut(context);
 
-                //Act and assert
-                await sut.RemoveUserFromBudget(user.Id, budget.Id);
+        //        //Act and assert
+        //        await sut.RemoveUserFromBudget(user.Id, budget.Id);
 
-                var budgetFromDb = await context.Budgets
-                    .AsNoTracking()
-                    .Include(x => x.UsersAssignedToBudget)
-                    .FirstOrDefaultAsync(x => x.Id == budget.Id);
+        //        var budgetFromDb = await context.Budgets
+        //            .AsNoTracking()
+        //            .Include(x => x.UsersAssignedToBudget)
+        //            .FirstOrDefaultAsync(x => x.Id == budget.Id);
 
-                //Assert
-                Assert.That(!budgetFromDb.UsersAssignedToBudget.Any(x => x.Id == user.Id));
-            }
-        }
+        //        //Assert
+        //        Assert.That(!budgetFromDb.UsersAssignedToBudget.Any(x => x.Id == user.Id));
+        //    }
+        //}
 
-        [Test]
-        public async Task RemoveUserFromBudget_ThrowException_IfRequestingUserNotAssignedToBudget()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var user = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
-                    .Generate();
+        //[Test]
+        //public async Task RemoveUserFromBudget_ThrowException_IfRequestingUserNotAssignedToBudget()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var user = new Faker<ApplicationUser>()
+        //            .RuleFor(x => x.UserName, f => f.Name.FirstName())
+        //            .Generate();
 
-                await context.AddAsync(user);
-                await context.SaveChangesAsync();
+        //        await context.AddAsync(user);
+        //        await context.SaveChangesAsync();
 
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { user })
-                    .Generate();
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { user })
+        //            .Generate();
 
-                await context.AddAsync(budget);
-                await context.SaveChangesAsync();
-
-
-                var sut = GetSut(context);
-
-                //Act and assert
-                Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.RemoveUserFromBudget(user.Id, budget.Id));
-            }
-        }
-
-        [Test]
-        public async Task RemoveUserFromBudget_ThrowException_IfUserNotAssignedToBudget()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var user = new Faker<ApplicationUser>()
-                    .RuleFor(x => x.UserName, f => f.Name.FirstName())
-                    .Generate();
-
-                var requestingUser = await GetMockedUser(context);
-
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
-                    .Generate();
-
-                await context.AddAsync(user);
-                await context.AddAsync(budget);
-                await context.SaveChangesAsync();
-
-                var sut = GetSut(context);
-
-                //Act and assert
-                Assert.ThrowsAsync<BadRequestException>(async () => await sut.RemoveUserFromBudget(user.Id, budget.Id));
-            }
-        }
+        //        await context.AddAsync(budget);
+        //        await context.SaveChangesAsync();
 
 
-        [Test]
-        public async Task RemoveUserFromBudget_ThrowException_IfUserTryToRemoveHimself()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var requestingUser = await GetMockedUser(context);
+        //        var sut = GetSut(context);
 
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
-                    .Generate();
+        //        //Act and assert
+        //        Assert.ThrowsAsync<UnauthorizedException>(async () => await sut.RemoveUserFromBudget(user.Id, budget.Id));
+        //    }
+        //}
 
-                await context.AddAsync(budget);
-                await context.SaveChangesAsync();
+        //[Test]
+        //public async Task RemoveUserFromBudget_ThrowException_IfUserNotAssignedToBudget()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var user = new Faker<ApplicationUser>()
+        //            .RuleFor(x => x.UserName, f => f.Name.FirstName())
+        //            .Generate();
 
-                var sut = GetSut(context);
+        //        var requestingUser = await GetMockedUser(context);
 
-                //Act and assert
-                Assert.ThrowsAsync<BadRequestException>(async () => await sut.RemoveUserFromBudget(requestingUser.Id, budget.Id));
-            }
-        }
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
+        //            .Generate();
 
-        [Test]
-        public async Task RemoveUserFromBudget_ThrowException_IfUserNotExists()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var budget = new Faker<Budget>()
-                    .RuleFor(x => x.Name, f => f.Finance.AccountName())
-                    .RuleFor(x => x.Balance, f => f.Random.Decimal())
-                    .Generate();
+        //        await context.AddAsync(user);
+        //        await context.AddAsync(budget);
+        //        await context.SaveChangesAsync();
 
-                await context.AddAsync(budget);
-                await context.SaveChangesAsync();
+        //        var sut = GetSut(context);
 
-                var sut = GetSut(context);
+        //        //Act and assert
+        //        Assert.ThrowsAsync<BadRequestException>(async () => await sut.RemoveUserFromBudget(user.Id, budget.Id));
+        //    }
+        //}
 
-                //Act and assert
-                Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.RemoveUserFromBudget("TestId", budget.Id));
-            }
-        }
+
+        //[Test]
+        //public async Task RemoveUserFromBudget_ThrowException_IfUserTryToRemoveHimself()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var requestingUser = await GetMockedUser(context);
+
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .RuleFor(x => x.UsersAssignedToBudget, new List<ApplicationUser> { requestingUser })
+        //            .Generate();
+
+        //        await context.AddAsync(budget);
+        //        await context.SaveChangesAsync();
+
+        //        var sut = GetSut(context);
+
+        //        //Act and assert
+        //        Assert.ThrowsAsync<BadRequestException>(async () => await sut.RemoveUserFromBudget(requestingUser.Id, budget.Id));
+        //    }
+        //}
+
+        //[Test]
+        //public async Task RemoveUserFromBudget_ThrowException_IfUserNotExists()
+        //{
+        //    using (var context = GetDbContext())
+        //    {
+        //        //Arrange
+        //        var budget = new Faker<Budget>()
+        //            .RuleFor(x => x.Name, f => f.Finance.AccountName())
+        //            .RuleFor(x => x.Balance, f => f.Random.Decimal())
+        //            .Generate();
+
+        //        await context.AddAsync(budget);
+        //        await context.SaveChangesAsync();
+
+        //        var sut = GetSut(context);
+
+        //        //Act and assert
+        //        Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.RemoveUserFromBudget("TestId", budget.Id));
+        //    }
+        //}
 
         private BudgetService GetSut(ApplicationDbContext context) => new BudgetService(context, UserProvider);
     }

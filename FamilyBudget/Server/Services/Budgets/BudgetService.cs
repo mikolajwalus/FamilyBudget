@@ -4,6 +4,7 @@ using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Identity;
 using FamilyBudget.Shared.Budget;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging;
 
 namespace FamilyBudget.Server.Services.Budgets
 {
@@ -21,83 +22,13 @@ namespace FamilyBudget.Server.Services.Budgets
         public async Task<List<UserForBudget>> GetUsers()
         {
             return await _context.Users.AsNoTracking()
+                .Where(x => x.Id != _requestingUserId)
                 .Select(x => new UserForBudget
                 {
                     Id = x.Id,
                     Username = x.UserName,
                 })
                 .ToListAsync();
-        }
-
-        public async Task AddUserToBudget(string userId, Guid budgetId)
-        {
-            var budget = await GetBudgetWithUsers(budgetId);
-
-            if (budget is null)
-            {
-                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
-            }
-
-            var userToAdd = await _context.Users.FindAsync(userId);
-
-            if (userToAdd is null)
-            {
-                throw new ResourceNotFoundException(ResponseMessages.GetUserNotExistsMessage(userId));
-            }
-
-            if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
-            {
-                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
-            }
-
-
-            if (budget.UsersAssignedToBudget.Any(x => x.Id == userId))
-            {
-                return;
-            }
-
-
-            budget.UsersAssignedToBudget.Add(userToAdd);
-
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task RemoveUserFromBudget(string userId, Guid budgetId)
-        {
-            var budget = await GetBudgetWithUsers(budgetId);
-
-            if (budget is null)
-            {
-                throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(budgetId));
-            }
-
-            var userToRemove = await _context.Users.FindAsync(userId);
-
-            if (userToRemove is null)
-            {
-                throw new ResourceNotFoundException(ResponseMessages.GetUserNotExistsMessage(userId));
-            }
-
-            if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
-            {
-                throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, _requestingUserId));
-            }
-
-            if (userId == _requestingUserId)
-            {
-                throw new BadRequestException(ResponseMessages.UserRemovingHimselfFromBudget);
-            }
-
-            if (!budget.UsersAssignedToBudget.Any(x => x.Id == userId))
-            {
-                var errorMessage = ResponseMessages.GetUserNotAssignedToBudgetMessage(budgetId, userId);
-
-                throw new BadRequestException(errorMessage);
-            }
-
-            budget.UsersAssignedToBudget.Remove(userToRemove);
-
-            await _context.SaveChangesAsync();
         }
 
         public async Task<List<UserForBudget>> GetUsersAssignedToBudget(Guid id)
@@ -163,7 +94,7 @@ namespace FamilyBudget.Server.Services.Budgets
         {
             ValidateBudgetName(dto.Name);
 
-            await ValidateIfNameIsNotTaken(dto.Name);
+            await ValidateIfNameIsNotTaken(dto.Name, dto.Id);
 
             var budget = await GetBudgetWithUsers(dto.Id);
 
@@ -172,33 +103,20 @@ namespace FamilyBudget.Server.Services.Budgets
                 throw new ResourceNotFoundException(ResponseMessages.GetBudgetNotExistsMessage(dto.Id));
             }
 
-
             if (!budget.UsersAssignedToBudget.Any(x => x.Id == _requestingUserId))
             {
                 throw new UnauthorizedException(ResponseMessages.GetUserNotAssignedToBudgetMessage(dto.Id, _requestingUserId));
             }
 
-            var users = await _context.Users
-                .Where(x => dto.AssignedUsers.Contains(x.Id) || x.UserBudgets.Any(b => b.Id == dto.Id))
-                .ToDictionaryAsync(x => x.Id);
+            await PerformBudgetUpdate(dto, budget);
+        }
 
-            var usersToRemove = budget.UsersAssignedToBudget.Where(x => !dto.AssignedUsers.Contains(x.Id));
-
-            var usersIdsToAdd = dto
-                .AssignedUsers
-                .Where(x => budget.UsersAssignedToBudget.Any(u => u.Id == x));
-
-            foreach (var userToRemove in usersToRemove)
-            {
-                budget.UsersAssignedToBudget.Remove(userToRemove);
-            }
-
-            foreach (var usersIdToAdd in usersIdsToAdd)
-            {
-                budget.UsersAssignedToBudget.Remove(users[usersIdToAdd]);
-            }
+        private async Task PerformBudgetUpdate(BudgetForUpdateDto dto, Budget budget)
+        {
+            await UpdateAssignedUsers(dto, budget);
 
             budget.Name = dto.Name;
+
             await _context.SaveChangesAsync();
         }
 
@@ -226,6 +144,7 @@ namespace FamilyBudget.Server.Services.Budgets
         public async Task<BudgetDto> GetBudget(Guid id)
         {
             var budget = await _context.Budgets
+                .Include(x => x.UsersAssignedToBudget.Where(u => u.Id == _requestingUserId))
                 .Where(x => x.UsersAssignedToBudget.Any(user => user.Id == _requestingUserId) && x.Id == id)
                 .FirstOrDefaultAsync();
 
@@ -242,9 +161,40 @@ namespace FamilyBudget.Server.Services.Budgets
             };
         }
 
-        private async Task ValidateIfNameIsNotTaken(string name)
+        private async Task UpdateAssignedUsers(BudgetForUpdateDto dto, Budget budget)
         {
-            var budgetWithNameExists = await _context.Budgets.Where(x => x.Name == name).AnyAsync();
+            var users = await _context.Users
+                .Where(x => dto.AssignedUsers.Contains(x.Id) || x.UserBudgets.Any(b => b.Id == dto.Id))
+                .ToDictionaryAsync(x => x.Id);
+
+            var usersToRemove = budget.UsersAssignedToBudget
+                .Where(x => !dto.AssignedUsers.Contains(x.Id) && x.Id != _requestingUserId)
+                .ToList();
+
+            var usersToAdd = dto
+                .AssignedUsers
+                .Where(x => !budget.UsersAssignedToBudget.Any(u => u.Id == x))
+                .Select(x => users[x])
+                .ToList();
+
+            foreach (var userToRemove in usersToRemove)
+            {
+                budget.UsersAssignedToBudget.Remove(userToRemove);
+            }
+
+            budget.UsersAssignedToBudget.AddRange(usersToAdd);
+        }
+
+        private async Task ValidateIfNameIsNotTaken(string name, Guid? budgetId = null)
+        {
+            var query = _context.Budgets.Where(x => x.Name == name);
+
+            if (budgetId is not null)
+            {
+                query = query.Where(x => x.Id != budgetId.Value);
+            }
+
+            var budgetWithNameExists = await query.AnyAsync();
 
             if (budgetWithNameExists)
             {
@@ -265,20 +215,6 @@ namespace FamilyBudget.Server.Services.Budgets
             return await _context.Budgets
                 .Include(x => x.UsersAssignedToBudget)
                 .FirstOrDefaultAsync(x => x.Id == budgetId);
-        }
-
-        private async Task<bool> CheckIfUserAssignedToBudget(string userId, Guid budgetId)
-        {
-            var user = await _context.Users
-                .Where(x => x.Id == userId && x.UserBudgets.Any(b => b.Id == budgetId))
-                .FirstOrDefaultAsync();
-
-            if (user is null)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

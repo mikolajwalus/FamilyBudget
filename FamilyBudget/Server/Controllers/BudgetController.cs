@@ -16,22 +16,6 @@ namespace FamilyBudget.Server.Controllers
             _budgetService = budgetService;
         }
 
-        [HttpPost(BudgetApi.AddUserToBudget)]
-        public async Task<IActionResult> AddUserToBudget([FromRoute] string userId, [FromRoute] Guid budgetId)
-        {
-            await _budgetService.AddUserToBudget(userId, budgetId);
-
-            return NoContent();
-        }
-
-        [HttpDelete(BudgetApi.RemoveUserFromBudget)]
-        public async Task<IActionResult> RemoveUserFromBudget([FromRoute] string userId, [FromRoute] Guid budgetId)
-        {
-            await _budgetService.RemoveUserFromBudget(userId, budgetId);
-
-            return NoContent();
-        }
-
         [HttpGet(BudgetApi.GetBudget)]
         public async Task<BudgetDto> GetBudget([FromRoute] Guid budgetId)
         {

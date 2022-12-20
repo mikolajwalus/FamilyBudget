@@ -13,15 +13,6 @@ namespace FamilyBudget.Client.Services
             _httpClient = httpClient;
         }
 
-        public async Task AddUserToBudget(string userId, Guid budgetId)
-        {
-            var uri = BudgetApi.AddUserToBudget
-                .Replace(BudgetApi.BudgetIdRouteParam, budgetId.ToString())
-                .Replace(BudgetApi.UserIdRouteParam, userId);
-
-            await _httpClient.PostAsync(uri, null);
-        }
-
         public async Task<BudgetDto> CreateBudget(BudgetForCreationDto dto)
         {
             var result = await _httpClient.PostAsJsonAsync(BudgetApi.CreateBudget, dto);
@@ -51,15 +42,6 @@ namespace FamilyBudget.Client.Services
             var uri = BudgetApi.GetUsersAssignedToBudget.Replace(BudgetApi.BudgetIdRouteParam, id.ToString());
 
             return await _httpClient.GetFromJsonAsync<List<UserForBudget>>(uri);
-        }
-
-        public async Task RemoveUserFromBudget(string userId, Guid budgetId)
-        {
-            var uri = BudgetApi.RemoveUserFromBudget
-                .Replace(BudgetApi.BudgetIdRouteParam, budgetId.ToString())
-                .Replace(BudgetApi.UserIdRouteParam, userId);
-
-            await _httpClient.DeleteAsync(uri);
         }
 
         public async Task UpdateBudget(BudgetForUpdateDto dto)
