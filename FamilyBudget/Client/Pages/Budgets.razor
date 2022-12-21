@@ -37,7 +37,8 @@ else
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+    <div class="py-3">
+        <RadzenButton ButtonStyle="ButtonStyle.Primary" Text="Add budget" Class="my-1 ms-1" 
+        Click="@(args => Add())" @onclick:stopPropagation="true"/>
+    </div>
 }
-
-<RadzenButton ButtonStyle="ButtonStyle.Primary" Text="Add budget" Class="my-1 ms-1" 
-Click="@(args => Add())" @onclick:stopPropagation="true"/>

@@ -5,17 +5,28 @@
 
 <PageTitle>Family budget</PageTitle>
 
+<div class="py-5 container text-center w-100">
 <h1>Welcome to the family budget!</h1>
 
 <AuthorizeView>
     <Authorized>
-        <a href="authentication/profile">Hello, @context.User.Identity?.Name!</a>
+        <div class="py-5">
+            <div class="py-1">
+                <h3>Greetings @context.User.Identity?.Name!</h3>
+            </div>
+            <div>
+                <h6>Family budget app will help you and your family manage your expences</h6>
+                <h6>Dont hesitate and create new budget! by clicking below</h6>
+                <RadzenButton Click=@(args => GoToBudgetCreation()) Text="Create" ButtonStyle="ButtonStyle.Primary" />
+            </div>
+        </div>
     </Authorized>
     <NotAuthorized>
-        <RadzenButton Click=@(args => BeginLogIn()) Text="Login" ButtonStyle="ButtonStyle.Primary" />
+        <RadzenButton class="px-2" Click=@(args => BeginLogIn()) Text="Login" ButtonStyle="ButtonStyle.Primary" />
         <RadzenButton Click=@(args => BeginRegister()) Text="Register" ButtonStyle="ButtonStyle.Secondary" />
     </NotAuthorized>
 </AuthorizeView>
+</div>
 
 @code{
     private void BeginLogIn()
@@ -31,5 +42,10 @@
     private void BeginLogOut()
     {
         Navigation.NavigateToLogout("authentication/logout");
+    }
+
+    private void GoToBudgetCreation()
+    {
+        Navigation.NavigateToLogout("/Budget");
     }
 }
