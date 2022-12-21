@@ -1,0 +1,60 @@
+﻿@page "/AdminDashboard"
+@using FamilyBudget.Client.Services.Identity;
+@using FamilyBudget.Client.Services;
+@using FamilyBudget.Shared.Users;
+@inject IUserService userService;
+@inject IUserProvider userProvider;
+
+<PageTitle>Budget entry categories</PageTitle>
+
+<h3 class="py-3">Budget entry categories</h3>
+
+@if (Users is null)
+{
+    <h3>Loading...</h3>
+} 
+else
+{
+    <RadzenDataGrid @ref="grid"  AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                AllowPaging="true" PageSize="10" AllowSorting="true" Data="@Users" TItem="UserForAdminConsoleDto" ColumnWidth="200px" 
+                Class="m-4">
+        <Columns>
+            <RadzenDataGridColumn TItem="UserForAdminConsoleDto" Property="Id" Title="Id" />
+            <RadzenDataGridColumn TItem="UserForAdminConsoleDto" Property="Username" Title="Username" />
+            <RadzenDataGridColumn Title="Is admin" TItem="UserForAdminConsoleDto" Width="60px" Sortable="false" Filterable="false">
+                <Template Context="data">
+                    <RadzenCheckBox TriState="false" Value="data.IsAdmin" Disabled="@(requestingUserId == data.Id)"
+                                TValue="bool" Change=@(args => UpdateAdminStatus(data, args)) />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    List<UserForAdminConsoleDto> Users;
+    RadzenDataGrid<UserForAdminConsoleDto> grid;
+    string requestingUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await userService.GetUsers();
+        requestingUserId = await userProvider.GetUserId();
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task UpdateAdminStatus(UserForAdminConsoleDto user, bool isAdmin)
+    {
+        user.IsAdmin = isAdmin;
+
+        if(isAdmin)
+        {
+            await userService.AddUserAdminRole(user.Id);
+        }
+        else
+        {
+            await userService.RemoveUserAdminRole(user.Id);
+        }
+    }
+}

@@ -8,6 +8,18 @@ namespace FamilyBudget.Server.Data
 {
     public static class Seed
     {
+        private static readonly List<Type> _entityTypesToUpdateDates = new List<Type>
+        {
+            typeof(Budget),
+            typeof(BudgetEntry),
+            typeof(BudgetEntryCategory)
+        };
+
+        private const string _queryToUpdateDates = @"
+            UPDATE {0}
+            SET CreatedAt = DATEADD(day, ABS(CHECKSUM(NEWID())) % 720, '2020-01-01'),
+                UpdatedAt = DATEADD(day, ABS(CHECKSUM(NEWID())) % 20 + 1, createdAt)";
+
         public static async Task SeedData(
             ApplicationDbContext context,
             UserManager<ApplicationUser> signInManager,
@@ -43,6 +55,22 @@ namespace FamilyBudget.Server.Data
             await context.SaveChangesAsync();
 
             await CreateEntries(context, budgets, entriesCategories);
+
+            //await UpdateDates(context);
+        }
+
+        private static async Task UpdateDates(ApplicationDbContext context)
+        {
+
+            foreach (var type in _entityTypesToUpdateDates)
+            {
+                var entityType = context.Model.FindEntityType(type);
+                var tableName = entityType.GetTableName();
+
+                var query = string.Format(_queryToUpdateDates, tableName);
+
+                await context.Database.ExecuteSqlRawAsync(query);
+            }
         }
 
         private static async Task CreateEntries(ApplicationDbContext context, List<Budget> budgets, List<BudgetEntryCategory> entriesCategories)

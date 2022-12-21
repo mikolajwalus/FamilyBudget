@@ -1,5 +1,6 @@
 using FamilyBudget.Client;
 using FamilyBudget.Client.Services;
+using FamilyBudget.Client.Services.Identity;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -29,6 +30,7 @@ builder.Services.AddApiAuthorization();
 builder.Services.AddScoped<NotificationService>();
 
 //Add services
+builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IBudgetService, BudgetService>();
 builder.Services.AddTransient<IBudgetEntriesService, BudgetEntriesService>();
 builder.Services.AddTransient<IBudgetEntryCategoriesService, BudgetEntryCategoriesService>();

@@ -64,7 +64,6 @@ namespace FamilyBudget.Client.Services
 
             var uri = QueryHelpers.AddQueryString(baseUri, queryParams);
 
-
             return await _httpClient.GetFromJsonAsync<BudgetEntriesDto>(uri);
         }
 

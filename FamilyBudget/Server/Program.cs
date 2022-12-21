@@ -4,6 +4,7 @@ using FamilyBudget.Server.Infractructure.Middleware;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Server.Services.Identity;
+using FamilyBudget.Shared.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>()
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddIdentityServer()
@@ -50,6 +52,7 @@ builder.Services.AddRazorPages();
 
 //services
 builder.Services.AddScoped<IUserProvider, UserProvider>();
+builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IBudgetEntriesService, BudgetEntriesService>();
 builder.Services.AddScoped<IBudgetEntryCategoriesService, BudgetEntryCategoriesService>();
@@ -91,7 +94,16 @@ var services = scope.ServiceProvider;
 try
 {
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var context = services.GetRequiredService<ApplicationDbContext>();
+
+
+    var adminRoleExists = await context.Roles.AnyAsync(x => x.Name == Roles.Admin);
+
+    if (!adminRoleExists)
+    {
+        await roleManager.CreateAsync(new IdentityRole(Roles.Admin));
+    }
 
     await context.Database.MigrateAsync();
     await Seed.SeedData(context, userManager, dataConfiguration);

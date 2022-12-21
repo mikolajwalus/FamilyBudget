@@ -12,6 +12,7 @@
         public const string UserNotAssignedToBudget = "User with Id {0} is not assigned to budget with Id {1}";
         public const string UserNotExist = "User with Id {0} doesn't exist";
         public const string UserRemovingHimselfFromBudget = "User cannot remove himself from budget";
+        public const string UserRemovingHimselfFromAdmin = "User cannot remove himself from admin role";
 
         public static string GetBudgetNotExistsMessage(Guid budgetId)
         {
