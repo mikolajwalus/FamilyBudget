@@ -1,7 +1,6 @@
 ﻿using FamilyBudget.Client.Services;
 using FamilyBudget.Shared.Budget;
 using Microsoft.AspNetCore.Components;
-using Radzen;
 
 namespace FamilyBudget.Client.Pages
 {
@@ -13,9 +12,6 @@ namespace FamilyBudget.Client.Pages
         [Inject]
         NavigationManager NavigationManager { get; set; }
 
-        [Inject]
-        NotificationService NotificationService { get; set; }
-
         public List<BudgetDto> UserBudgets;
 
         protected override async Task OnInitializedAsync()
@@ -26,6 +22,11 @@ namespace FamilyBudget.Client.Pages
         void Edit(Guid id)
         {
             NavigationManager.NavigateTo($"/Budget/{id}");
+        }
+
+        void ToDashboard(Guid id)
+        {
+            NavigationManager.NavigateTo($"/BudgetDashboard/{id}");
         }
 
         void Add()

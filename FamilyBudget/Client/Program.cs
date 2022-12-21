@@ -30,6 +30,8 @@ builder.Services.AddScoped<NotificationService>();
 
 //Add services
 builder.Services.AddTransient<IBudgetService, BudgetService>();
+builder.Services.AddTransient<IBudgetEntriesService, BudgetEntriesService>();
+builder.Services.AddTransient<IBudgetEntryCategoriesService, BudgetEntryCategoriesService>();
 builder.Services.AddTransient<IUserProvider, UserProvider>();
 
 await builder.Build().RunAsync();

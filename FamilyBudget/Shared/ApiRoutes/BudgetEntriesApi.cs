@@ -5,7 +5,7 @@
         public const string BudgetControllerRoute = Common.MainApiRoute + "/BudgetEntries";
         public const string BudgetEntriesCreate = BudgetControllerRoute;
         public const string BudgetEntriesUpdate = BudgetControllerRoute;
-        public const string BudgetEntriesDelete = BudgetControllerRoute;
+        public const string BudgetEntriesDelete = BudgetControllerRoute + "/" + Common.IdRouteParam;
         public const string BudgetEntriesGetForBudget = BudgetControllerRoute + "/GetForBudget";
     }
 }

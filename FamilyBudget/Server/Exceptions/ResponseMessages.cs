@@ -5,6 +5,7 @@
         public const string BudgetNotFound = "Budget with Id {0} doesn't exist";
         public const string BudgetWithNameAleardyExists = "Budget with Name {0} already exist";
         public const string BudgetNameNotNullOrEmpty = "Budget name ecannot be empty, or contains only whitespaces";
+        public const string BudgetEntryCategoryWithNameAleardyExists = "Budget entry category with Name {0} already exist";
         public const string BudgetEntryNotFound = "Budget entry with Id {0} doesn't exist";
         public const string BudgetEntryMoneyNotZero = "Budget entry money amount cannot be zero";
         public const string CategoryNotFound = "Budget entry category with Id {0} doesn't exist";
@@ -30,6 +31,11 @@
         public static string GetBudgetWithNameExistsMessage(string name)
         {
             return string.Format(BudgetWithNameAleardyExists, name);
+        }
+
+        public static string GetBudgetEntryCategoryWithNameExistsMessage(string name)
+        {
+            return string.Format(BudgetEntryCategoryWithNameAleardyExists, name);
         }
 
         public static string GetUserNotAssignedToBudgetMessage(Guid budgetId, string userId)

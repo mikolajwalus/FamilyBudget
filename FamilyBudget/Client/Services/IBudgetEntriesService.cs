@@ -7,6 +7,6 @@ namespace FamilyBudget.Client.Services
         Task<BudgetEntryDto> CreateEntry(BudgetEntryForCreationDto dto);
         Task DeleteEntry(Guid id);
         Task<BudgetEntriesDto> GetBudgetEntries(BudgetEntriesRequestDto dto);
-        Task UpdateEntry(BudgetEntryForUpdateDto dto);
+        Task<bool> UpdateEntry(BudgetEntryForUpdateDto dto);
     }
 }

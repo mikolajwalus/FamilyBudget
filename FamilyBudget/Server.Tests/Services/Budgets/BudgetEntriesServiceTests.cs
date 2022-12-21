@@ -5,7 +5,6 @@ using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.BudgetEntries;
 using FamilyBudget.Shared.Enums;
-using FamilyBudget.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 
@@ -365,11 +364,8 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = new PaginationParamsDto()
-                    {
-                        PageNumber = 1,
-                        PageSize = 1
-                    }
+                    PageNumber = 1,
+                    PageSize = 1
                 };
 
                 //Act and assert
@@ -388,32 +384,12 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = Guid.NewGuid(),
-                    PaginationParams = GetPaginationParams()
                 };
+
+                AddPaginationParams(dto);
 
                 //Act and assert
                 Assert.ThrowsAsync<ResourceNotFoundException>(async () => await sut.GetBudgetEntries(dto));
-            }
-        }
-
-        [Test]
-        public async Task GetBudgetEntries_ThrowException_IfPaginationParamsAreNull()
-        {
-            using (var context = GetDbContext())
-            {
-                //Arrange
-                var budget = await CreateBudget(context);
-                await AssignBudgetToUser(context, budget);
-
-                var sut = GetSut(context);
-
-                var dto = new BudgetEntriesRequestDto
-                {
-                    BudgetId = Guid.NewGuid(),
-                };
-
-                //Act and assert
-                Assert.ThrowsAsync<ArgumentNullException>(async () => await sut.GetBudgetEntries(dto));
             }
         }
 
@@ -444,8 +420,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = GetPaginationParams(1, entriesAmount),
                 };
+
+                AddPaginationParams(dto, 1, entriesAmount);
 
                 //Act
                 var result = await sut.GetBudgetEntries(dto);
@@ -498,9 +475,10 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = GetPaginationParams(1, entriesToReturnAmount),
                     CategoryId = requestedCategory.Id,
                 };
+
+                AddPaginationParams(dto, 1, entriesToReturnAmount);
 
                 //Act
                 var result = await sut.GetBudgetEntries(dto);
@@ -551,9 +529,10 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = GetPaginationParams(1, pageSize),
                     EntriesType = entryType
                 };
+
+                AddPaginationParams(dto, 1, pageSize);
 
                 //Act
                 var result = await sut.GetBudgetEntries(dto);
@@ -605,8 +584,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = GetPaginationParams(pageNumber, pageSize),
                 };
+
+                AddPaginationParams(dto, pageNumber, pageSize);
 
                 //Act
                 var result = await sut.GetBudgetEntries(dto);
@@ -653,8 +633,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = GetPaginationParams(2, 15),
                 };
+
+                AddPaginationParams(dto, 2, 15);
 
                 //Act
                 var result = await sut.GetBudgetEntries(dto);
@@ -689,8 +670,9 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 var dto = new BudgetEntriesRequestDto
                 {
                     BudgetId = budget.Id,
-                    PaginationParams = GetPaginationParams(0, 15),
                 };
+
+                AddPaginationParams(dto, 0, 15);
 
                 //Act and assert
                 Assert.ThrowsAsync<ArgumentException>(async () => await sut.GetBudgetEntries(dto));
@@ -787,10 +769,10 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
             return categories;
         }
 
-        private PaginationParamsDto GetPaginationParams(int pageNumber = 1, int pageSize = 1) => new PaginationParamsDto()
+        private void AddPaginationParams(BudgetEntriesRequestDto dto, int pageNumber = 1, int pageSize = 1)
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
+            dto.PageNumber = pageNumber;
+            dto.PageSize = pageSize;
+        }
     }
 }

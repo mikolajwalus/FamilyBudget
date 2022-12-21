@@ -1,6 +1,4 @@
 ﻿using FamilyBudget.Shared.Enums;
-using FamilyBudget.Shared.Pagination;
-using System.ComponentModel.DataAnnotations;
 
 namespace FamilyBudget.Shared.BudgetEntries
 {
@@ -9,7 +7,7 @@ namespace FamilyBudget.Shared.BudgetEntries
         public Guid BudgetId { get; set; }
         public BudgetEntriesType EntriesType { get; set; }
         public Guid? CategoryId { get; set; }
-        [Required]
-        public PaginationParamsDto PaginationParams { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
     }
 }

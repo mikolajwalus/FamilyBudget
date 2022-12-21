@@ -77,14 +77,9 @@ namespace FamilyBudget.Server.Services.Budgets
 
         public async Task<BudgetEntriesDto> GetBudgetEntries(BudgetEntriesRequestDto dto)
         {
-            if (dto.PaginationParams is null)
+            if (dto.PageNumber == 0)
             {
-                throw new ArgumentNullException(nameof(dto.PaginationParams));
-            }
-
-            if (dto.PaginationParams.PageNumber == 0)
-            {
-                throw new ArgumentException(nameof(dto.PaginationParams.PageSize));
+                throw new ArgumentException(nameof(dto.PageSize));
             }
 
             var budgetId = dto.BudgetId;
@@ -174,7 +169,14 @@ namespace FamilyBudget.Server.Services.Budgets
         {
             var itemsAmount = await _context.BudgetEntries.CountAsync();
 
-            var paginationResponseDto = new PaginationResponseDto(itemsAmount, dto.PaginationParams.PageNumber, dto.PaginationParams.PageSize);
+            var paginationResponseDto = new PaginationResponseDto()
+            {
+                CurrentPage = dto.PageNumber,
+                TotalPages = (int)Math.Ceiling(itemsAmount / (double)dto.PageSize),
+                PageSize = dto.PageSize,
+                TotalCount = itemsAmount,
+            };
+
             return paginationResponseDto;
         }
 
@@ -195,8 +197,8 @@ namespace FamilyBudget.Server.Services.Budgets
             entriesQuery = entriesQuery.OrderBy(x => x.UpdatedAt);
 
             entriesQuery = entriesQuery
-                .Skip((dto.PaginationParams.PageNumber - 1) * dto.PaginationParams.PageSize)
-                .Take(dto.PaginationParams.PageSize);
+                .Skip((dto.PageNumber - 1) * dto.PageSize)
+                .Take(dto.PageSize);
 
             return entriesQuery;
         }

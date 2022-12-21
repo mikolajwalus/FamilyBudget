@@ -52,6 +52,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<IUserProvider, UserProvider>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IBudgetEntriesService, BudgetEntriesService>();
+builder.Services.AddScoped<IBudgetEntryCategoriesService, BudgetEntryCategoriesService>();
 
 var app = builder.Build();
 

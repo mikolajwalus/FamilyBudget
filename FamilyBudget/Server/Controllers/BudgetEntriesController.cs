@@ -37,7 +37,7 @@ namespace FamilyBudget.Server.Controllers
         }
 
         [HttpDelete(BudgetEntriesApi.BudgetEntriesDelete)]
-        public async Task<IActionResult> DeleteEntry([FromQuery] Guid id)
+        public async Task<IActionResult> DeleteEntry([FromRoute] Guid id)
         {
             await _budgetEntriesService.DeleteEntry(id);
 

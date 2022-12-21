@@ -2,12 +2,8 @@
 {
     public class PaginationResponseDto
     {
-        public PaginationResponseDto(int count, int pageNumber, int pageSize)
+        public PaginationResponseDto()
         {
-            CurrentPage = pageNumber;
-            TotalPages = (int)Math.Ceiling(count / (double)pageSize);
-            PageSize = pageSize;
-            TotalCount = count;
         }
 
         public int CurrentPage { get; set; }

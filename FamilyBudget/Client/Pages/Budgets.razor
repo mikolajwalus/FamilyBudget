@@ -16,6 +16,7 @@ else
                 <th>Name</th>
                 <th>Balance</th>
                 <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -26,6 +27,9 @@ else
                     <td class="@((budget.Balance > 0 ? "text-success" : budget.Balance < 0 ? "text-danger" : "text-secondary"))">@budget.Balance</td>
                     <td>
                         <button class="btn btn-primary" @onclick="(() => Edit(budget.Id))"><i class="oi oi-pencil"></i></button>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="(() => ToDashboard(budget.Id))">See details</button>
                     </td>
                 </tr>
             }
