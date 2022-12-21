@@ -92,11 +92,13 @@ namespace FamilyBudget.Server.Services.Budgets
 
             entriesQuery = ImplementFiltering(dto, entriesQuery);
 
+            var entriesAmount = await entriesQuery.CountAsync();
+
             entriesQuery = ImplementPagination(dto, entriesQuery);
 
             var entries = await GetDtos(entriesQuery);
 
-            var paginationResponseDto = await GetPaginationResponse(dto);
+            var paginationResponseDto = await GetPaginationResponse(dto, entriesAmount);
 
             return new BudgetEntriesDto
             {
@@ -165,10 +167,8 @@ namespace FamilyBudget.Server.Services.Budgets
             }
         }
 
-        private async Task<PaginationResponseDto> GetPaginationResponse(BudgetEntriesRequestDto dto)
+        private async Task<PaginationResponseDto> GetPaginationResponse(BudgetEntriesRequestDto dto, int itemsAmount)
         {
-            var itemsAmount = await _context.BudgetEntries.CountAsync();
-
             var paginationResponseDto = new PaginationResponseDto()
             {
                 CurrentPage = dto.PageNumber,
@@ -187,14 +187,16 @@ namespace FamilyBudget.Server.Services.Budgets
                 {
                     Id = x.Id,
                     MoneyAmount = x.MoneyAmount,
-                    CategoryName = x.BudgetEntryCategory.Name
+                    CategoryName = x.BudgetEntryCategory.Name,
+                    CreatedAt = x.CreatedAt,
+                    LastUpdatedAt = x.UpdatedAt
                 })
                 .ToListAsync();
         }
 
         private static IQueryable<BudgetEntry> ImplementPagination(BudgetEntriesRequestDto dto, IQueryable<BudgetEntry> entriesQuery)
         {
-            entriesQuery = entriesQuery.OrderBy(x => x.UpdatedAt);
+            entriesQuery = entriesQuery.OrderByDescending(x => x.UpdatedAt);
 
             entriesQuery = entriesQuery
                 .Skip((dto.PageNumber - 1) * dto.PageSize)

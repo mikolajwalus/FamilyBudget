@@ -1,8 +1,10 @@
 ﻿@page "/ManageBudgets"
+@using FamilyBudget.Client.Helpers;
+@using FamilyBudget.Shared.Budget;
 
 <PageTitle>Manage budgets</PageTitle>
 
-<h3>Manage budgets</h3>
+<h3 class="py-3">Manage budgets</h3>
 
 @if(UserBudgets is null)
 {
@@ -10,31 +12,31 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Balance</th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var budget in UserBudgets)
-            {
-                <tr>
-                    <td>@budget.Name</td>
-                    <td class="@((budget.Balance > 0 ? "text-success" : budget.Balance < 0 ? "text-danger" : "text-secondary"))">@budget.Balance</td>
-                    <td>
-                        <button class="btn btn-primary" @onclick="(() => Edit(budget.Id))"><i class="oi oi-pencil"></i></button>
-                    </td>
-                    <td>
-                        <button class="btn btn-primary" @onclick="(() => ToDashboard(budget.Id))">See details</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <RadzenDataGrid AllowAlternatingRows="false" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true"
+                Data="@UserBudgets" TItem="BudgetDto" ShowPagingSummary="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="BudgetDto" Property="Name" Title="Name" Width="200px" />
+            <RadzenDataGridColumn TItem="BudgetDto" Property="Balance" Title="Balance" Width="200px">
+                <Template Context="budget">
+                    <span class="@TextHelpers.GetTextColorBasedOnValue(budget.Balance)">
+                        @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", budget.Balance)
+                    </span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="BudgetDto" Width="200px" Filterable="false"
+                Sortable="false">
+                <Template Context="budget">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium"
+                              Click="@(args => Edit(budget.Id))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" Text="See details"  Class="my-1 ms-1"
+                              Click="@(args => ToDashboard(budget.Id))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 }
 
-<button class="btn btn-primary" @onclick="Add">Add budget</button>
+<RadzenButton ButtonStyle="ButtonStyle.Primary" Text="Add budget" Class="my-1 ms-1" 
+Click="@(args => Add())" @onclick:stopPropagation="true"/>

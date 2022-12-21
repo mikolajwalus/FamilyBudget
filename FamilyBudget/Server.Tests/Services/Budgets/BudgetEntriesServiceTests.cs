@@ -429,7 +429,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
 
                 //Assert
                 Assert.AreEqual(entriesAmount, result.Entries.Count);
-                Assert.That(result.Entries, Is.Ordered.By(nameof(BudgetEntryDto.LastUpdatedAt)));
+                Assert.That(result.Entries, Is.Ordered.By(nameof(BudgetEntryDto.LastUpdatedAt)).Descending);
 
                 foreach (var entry in result.Entries)
                 {
@@ -574,7 +574,7 @@ namespace FamilyBudget.Server.Tests.Services.Budgets
                 await AddEntriesToDb(context, entries);
 
                 var entriesToReturn = entries
-                    .OrderBy(x => x.UpdatedAt)
+                    .OrderByDescending(x => x.UpdatedAt)
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();

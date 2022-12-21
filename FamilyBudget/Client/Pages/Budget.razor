@@ -10,12 +10,12 @@
 @if (Id is null)
 {
     <PageTitle>Create a new Budget</PageTitle>
-    <h3>Create a new Budget</h3>
+    <h3 class="py-3">Create a new Budget</h3>
 }
 else
 {
     <PageTitle>Edit @Dto.Name</PageTitle>
-    <h3>Edit <strong>@Dto.Name</strong></h3>
+    <h3 class="py-3">Edit <strong>@Dto.Name</strong></h3>
 }
 
 
@@ -23,7 +23,7 @@ else
     <RadzenTemplateForm Data="@Dto" Submit="@(async (BudgetForCreationDto args) => { await Submit(args); })">
 
         <div class="row py-3">
-            <RadzenLabel Component="Users" Text="Users to assign" />
+            <RadzenLabel Component="Users" Text="Assigned users" />
             <RadzenDropDown Name="Users" AllowClear="false" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                             @bind-Value=@Dto.AssignedUsers Multiple="true" Placeholder="Select..." Data=@Users TextProperty="Username"
                             ValueProperty="Id" Class="w-100" />

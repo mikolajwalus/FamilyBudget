@@ -1,7 +1,11 @@
 ﻿@page "/BudgetDashboard/{id:guid}"
+@using FamilyBudget.Client.Helpers;
 @using FamilyBudget.Client.Services;
+@using FamilyBudget.Client.Validators
 @using FamilyBudget.Shared.Budget;
 @using FamilyBudget.Shared.BudgetEntries;
+@using FamilyBudget.Shared.Enums;
+@inject NotificationService NotificationService;
 @inject IBudgetService budgetService;
 @inject IBudgetEntriesService budgetEntriesService;
 @inject IBudgetEntryCategoriesService budgetEntryCategoriesService;
@@ -17,29 +21,77 @@
 } 
 else
 {
-    <RadzenDataGrid @ref="grid" AllowAlternatingRows="false" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true" EditMode="DataGridEditMode.Single"
-                Data="@Entries" TItem="BudgetEntryDto" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
-        <Columns>
-            <RadzenDataGridColumn TItem="BudgetEntryDto" Property="CreatedAt" Title="CreatedAt" Width="120px" />
-            <RadzenDataGridColumn TItem="BudgetEntryDto" Property="UpdatedAt" Title="UpdatedAt" Width="120px" />
-            <RadzenDataGridColumn TItem="BudgetEntryDto" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
-                <Template Context="order">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(order))" @onclick:stopPropagation="true">
-                    </RadzenButton>
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@(args => DeleteRow(order))" @onclick:stopPropagation="true">
-                    </RadzenButton>
-                </Template>
-                <EditTemplate Context="order">
-                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(order))">
-                    </RadzenButton>
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@((args) => CancelEdit(order))">
-                    </RadzenButton>
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@(args => DeleteRow(order))">
-                    </RadzenButton>
-                </EditTemplate>
-            </RadzenDataGridColumn>
-        </Columns>
-    </RadzenDataGrid>
+    <div class="container-fluid">
+        <RadzenText TextStyle="TextStyle.H2" TagName="TagName.H2" Class="my-4">
+            <strong>@Budget.Name</strong>
+        </RadzenText>
+        <div class="mb-1 row">
+            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H4">
+                 <p>Current balance:</p>
+                <p class="@TextHelpers.GetTextColorBasedOnValue(Budget.Balance)">
+                    @TextHelpers.FormatMoneyToDisplay(Budget.Balance)
+                </p>
+            </RadzenText>
+        </div>
+        <div class="mb-3 row">
+            <div class="py-2 px-0">
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Define type</RadzenText>
+                <RadzenDropDown Data="@EntriesTypes" @bind-Value="@SelectedEntriesType" Change=@(args => ReloadGridData()) />
+            </div>
+            <div class="py-2 px-0">
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Select category</RadzenText>
+                <RadzenDropDown AllowClear="true" Data="@Categories" @bind-Value="@SelectedCategoryId" 
+                    ValueProperty="Id" TextProperty="Name" Change=@(args => ReloadGridData()) />
+            </div>
+        </div>
+
+        <div class="row">
+            <RadzenDataGrid @ref="grid" AllowAlternatingRows="false" AllowFiltering="false" AllowPaging="true" PageSize="5" AllowSorting="false" EditMode="DataGridEditMode.Single"
+                        Data="@Entries" TItem="BudgetEntryDto" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow" Count=@Count IsLoading=@IsLoading LoadData="@OnLoadData" 
+                        ShowPagingSummary="true">
+                <Columns>
+                    <RadzenDataGridColumn TItem="BudgetEntryDto" Property="MoneyAmount" Title="Money amount" Width="200px">
+                        <Template Context="entry">
+                            <span class="@TextHelpers.GetTextColorBasedOnValue(entry.MoneyAmount)">
+                                @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", entry.MoneyAmount)
+                            </span> 
+                        </Template>
+                        <EditTemplate Context="entry">
+                            <RadzenNumeric style="display: block" Name="MoneyAmount" @bind-Value="entry.MoneyAmount" />
+                            <NotZeroValidator Popup="true" Component="MoneyAmount" Style="position: absolute" />
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="BudgetEntryDto" Property="CategoryName" Title="Category" Width="220px">
+                        <EditTemplate Context="entry">
+                            <RadzenDropDown @bind-Value="entry.CategoryName" Data="@Categories" ValueProperty="Name" TextProperty="Name" />
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="BudgetEntryDto" Property="CreatedAt" Title="Created at" Width="120px" />
+                    <RadzenDataGridColumn TItem="BudgetEntryDto" Property="LastUpdatedAt" Title="Last updated at" Width="120px" />
+                    <RadzenDataGridColumn TItem="BudgetEntryDto" Context="entry" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
+                        <Template Context="entry">
+                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" 
+                                Click="@(args => EditRow(entry))" @onclick:stopPropagation="true">
+                            </RadzenButton>
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" Class="my-1 ms-1" 
+                                Click="@(args => DeleteRow(entry))" @onclick:stopPropagation="true">
+                            </RadzenButton>
+                        </Template>
+                        <EditTemplate Context="entry">
+                            <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(entry))">
+                            </RadzenButton>
+                            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Class="my-1 ms-1" 
+                                Click="@((args) => CancelEdit(entry))">
+                            </RadzenButton>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+        <div class="py-3">
+            <RadzenButton Click=@(args => InsertRow()) Text="Add new" ButtonStyle="ButtonStyle.Primary" />
+        </div>
+    </div>
 }
 
 @code {
@@ -47,37 +99,47 @@ else
     public Guid Id { get; set; }
 
     RadzenDataGrid<BudgetEntryDto> grid;
-
-    List<BudgetEntryDto> Entries;
-    BudgetDto Budget;
+    int Count;
+    int CurrentPage = 1;
+    int PageSize = 5;
+    bool IsLoading = false;
+    IEnumerable<string> EntriesTypes = Enum.GetNames(typeof(BudgetEntriesType));
+    string SelectedEntriesType = BudgetEntriesType.All.ToString();
     List<BudgetEntryCategoryDto> Categories;
+    Guid SelectedCategoryId;
+
+    BudgetDto Budget;
+    List<BudgetEntryDto> Entries;
 
     protected override async Task OnInitializedAsync()
     {
+        var categories = await budgetEntryCategoriesService.GetAll();
+        Categories = categories;
     }
 
     protected override async Task OnParametersSetAsync()
     {
         var budget = await budgetService.GetBudget(Id);
-        var categories = await budgetEntryCategoriesService.GetAll();
 
         var dto = new BudgetEntriesRequestDto
             {
                 BudgetId = Id,
-                PageNumber = 1,
-                PageSize = 10
+                PageNumber = CurrentPage,
+                PageSize = PageSize
             };
 
         var budgetEntries = await budgetEntriesService.GetBudgetEntries(dto);
 
         Budget = budget;
-        Categories = categories;
         Entries = budgetEntries.Entries;
+        Count = budgetEntries.EntriesPagination.TotalCount;
     }
 
 
     async Task EditRow(BudgetEntryDto entry)
     {
+        categoryNameBeforEdit = entry.CategoryName;
+        moneyAmountBeforeEdit = entry.MoneyAmount;
         entryToUpdate = entry;
         await grid.EditRow(entry);
     }
@@ -101,6 +163,9 @@ else
         };
 
         await budgetEntriesService.UpdateEntry(dto);
+
+        Budget.Balance -= moneyAmountBeforeEdit;
+        Budget.Balance += entry.MoneyAmount;
     }
 
     async Task SaveRow(BudgetEntryDto entity)
@@ -108,24 +173,20 @@ else
         await grid.UpdateRow(entity);
     }
 
-    void CancelEdit(BudgetEntryDto entity)
+    void CancelEdit(BudgetEntryDto entry)
     {
-        if (entity == entryToInsert)
+        if (entry == entryToInsert)
         {
             entryToInsert = null;
         }
+        else
+        {
+            entryToUpdate = null;
+            entry.CategoryName = categoryNameBeforEdit;
+            entry.MoneyAmount = moneyAmountBeforeEdit;
+        }
 
-        entryToUpdate = null;
-
-        grid.CancelEditRow(entity);
-
-        // For production
-        //var orderEntry = dbContext.Entry(entity);
-        //if (orderEntry.State == EntityState.Modified)
-        //{
-        //    orderEntry.CurrentValues.SetValues(orderEntry.OriginalValues);
-        //    orderEntry.State = EntityState.Unchanged;
-        //}
+        grid.CancelEditRow(entry);
     }
 
     async Task DeleteRow(BudgetEntryDto entry)
@@ -143,7 +204,8 @@ else
         if (Entries.Contains(entry))
         {
             await budgetEntriesService.DeleteEntry(entry.Id);
-
+            Count--;
+            Budget.Balance -= entry.MoneyAmount;
             await grid.Reload();
         }
         else
@@ -155,6 +217,8 @@ else
 
     BudgetEntryDto entryToInsert;
     BudgetEntryDto entryToUpdate;
+    decimal moneyAmountBeforeEdit; 
+    string categoryNameBeforEdit; 
 
     async Task InsertRow()
     {
@@ -168,6 +232,8 @@ else
 
     async Task OnCreateRow(BudgetEntryDto entry)
     {
+        IsLoading = true;
+
         var dto = new BudgetEntryForCreationDto
             {
                 BudgetId = Budget.Id,
@@ -176,6 +242,46 @@ else
             };
 
         var result = await budgetEntriesService.CreateEntry(dto);
+
+        entry.CreatedAt = result.CreatedAt;
+        entry.LastUpdatedAt = result.LastUpdatedAt;
+
+        Count++;
+        Budget.Balance += entry.MoneyAmount;
+
+        IsLoading = false;
+    }
+
+    async Task OnLoadData(LoadDataArgs args)
+    {
+        CurrentPage = ((int)Math.Ceiling(args.Skip.Value / (double)PageSize) + 1);
+
+        await ReloadGridData();
+    }
+
+    async Task ReloadGridData()
+    {
+        IsLoading = true;
+
+        var dto = new BudgetEntriesRequestDto
+        {
+            BudgetId = Id,
+            EntriesType = Enum.Parse<BudgetEntriesType>(SelectedEntriesType),
+            PageNumber = CurrentPage,
+            PageSize = PageSize
+        };
+
+        if(SelectedCategoryId != Guid.Empty)
+        {
+            dto.CategoryId = SelectedCategoryId;
+        }
+
+        var result = await budgetEntriesService.GetBudgetEntries(dto);
+
+        Entries = result.Entries;
+        Count = result.EntriesPagination.TotalCount;
+
+        IsLoading = false;
     }
 
     private Guid GetCategoryIdBasedOnName(string name) => Categories.Where(x => x.Name == name).First().Id;

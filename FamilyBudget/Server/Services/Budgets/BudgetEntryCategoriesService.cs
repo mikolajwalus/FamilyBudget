@@ -30,6 +30,8 @@ namespace FamilyBudget.Server.Services.Budgets
             {
                 Id = category.Id,
                 Name = category.Name,
+                CreatedAt = category.CreatedAt,
+                LastUpdatedAt = category.UpdatedAt
             };
         }
 
@@ -40,6 +42,8 @@ namespace FamilyBudget.Server.Services.Budgets
                 {
                     Id = x.Id,
                     Name = x.Name,
+                    CreatedAt = x.CreatedAt,
+                    LastUpdatedAt = x.UpdatedAt
                 })
                 .ToListAsync();
         }
@@ -65,6 +69,8 @@ namespace FamilyBudget.Server.Services.Budgets
             {
                 Id = category.Id,
                 Name = category.Name,
+                CreatedAt = category.CreatedAt,
+                LastUpdatedAt = category.UpdatedAt
             };
         }
 

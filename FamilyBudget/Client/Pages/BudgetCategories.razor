@@ -1,0 +1,155 @@
+﻿@page "/BudgetCategories"
+@using FamilyBudget.Client.Helpers;
+@using FamilyBudget.Client.Services;
+@using FamilyBudget.Client.Validators
+@using FamilyBudget.Shared.Budget;
+@using FamilyBudget.Shared.BudgetEntries;
+@inject IBudgetEntryCategoriesService budgetEntryCategoriesService;
+
+<PageTitle>Budget entry categories</PageTitle>
+
+<h3 class="py-3">Budget entry categories</h3>
+
+@if (Categories is null)
+{
+    <h3>Loading...</h3>
+} 
+else
+{
+    <RadzenDataGrid @ref="grid" AllowAlternatingRows="false" AllowFiltering="false" AllowPaging="true" PageSize="5" AllowSorting="false" 
+        EditMode="DataGridEditMode.Single" Data="@Categories" TItem="BudgetEntryCategoryDto" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow" 
+        IsLoading=@IsLoading ShowPagingSummary="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="BudgetEntryCategoryDto" Property="Name" Title="Name" Width="200px">
+                <Template Context="category">
+                    @category.Name
+                </Template>
+                <EditTemplate Context="category">
+                    <RadzenTextBox style="display: block" Name="Name" @bind-Value="category.Name" />
+                    <UniqueValidator Values="@ForbiddenNames" Popup="true" Component="Name" Style="position: absolute" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="BudgetEntryCategoryDto" Property="CreatedAt" Title="Created at" Width="120px" />
+            <RadzenDataGridColumn TItem="BudgetEntryCategoryDto" Property="LastUpdatedAt" Title="Last updated at" Width="120px" />
+            <RadzenDataGridColumn TItem="BudgetEntryCategoryDto" Context="category" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
+                <Template Context="category">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" 
+                        Click="@(args => EditRow(category))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="category">
+                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(category))">
+                    </RadzenButton>
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Class="my-1 ms-1" 
+                        Click="@((args) => CancelEdit(category))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+    <div class="py-3">
+        <RadzenButton Click=@(args => InsertRow()) Text="Add new" ButtonStyle="ButtonStyle.Primary" />
+    </div>
+}
+
+@code {
+    RadzenDataGrid<BudgetEntryCategoryDto> grid;
+    bool IsLoading = false;
+    List<BudgetEntryCategoryDto> Categories;
+    List<string> ForbiddenNames;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var categories = await budgetEntryCategoriesService.GetAll();
+        Categories = categories;
+    }
+
+    async Task EditRow(BudgetEntryCategoryDto category)
+    {
+        categoryNameBeforEdit = category.Name;
+        categoryToUpdate = category;
+
+        AssignForbiddenNames(category.Id);
+
+        await grid.EditRow(category);
+    }
+
+    async Task OnUpdateRow(BudgetEntryCategoryDto category)
+    {
+        if (category == categoryToInsert)
+        {
+            categoryToInsert = null;
+        }
+
+        categoryToUpdate = null;
+
+        var dto = new BudgetEntryCategoryDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+        };
+
+        await budgetEntryCategoriesService.Update(dto);
+    }
+
+    async Task SaveRow(BudgetEntryCategoryDto entity)
+    {
+        await grid.UpdateRow(entity);
+    }
+
+    void CancelEdit(BudgetEntryCategoryDto category)
+    {
+        if (category == categoryToInsert)
+        {
+            categoryToInsert = null;
+        }
+        else
+        {
+            categoryToUpdate = null;
+            category.Name = categoryNameBeforEdit;
+        }
+
+        grid.CancelEditRow(category);
+    }
+
+    BudgetEntryCategoryDto categoryToInsert;
+    BudgetEntryCategoryDto categoryToUpdate;
+    string categoryNameBeforEdit; 
+
+    async Task InsertRow()
+    {
+        categoryToInsert = new BudgetEntryCategoryDto()
+        {
+            Name = ""
+        };
+
+        AssignForbiddenNames();
+
+        await grid.InsertRow(categoryToInsert);
+    }
+
+    async Task OnCreateRow(BudgetEntryCategoryDto category)
+    {
+        IsLoading = true;
+
+        var result = await budgetEntryCategoriesService.Create(category.Name);
+
+        category.Id = result.Id;
+        category.CreatedAt = result.CreatedAt;
+        category.LastUpdatedAt = result.LastUpdatedAt;
+
+        IsLoading = false;
+    }
+
+    public void AssignForbiddenNames(Guid? id = null)
+    {
+        IEnumerable<BudgetEntryCategoryDto> categories = Categories;
+
+        if(id is not null)
+        {
+            categories = categories.Where(x => x.Id != id.Value);
+        }
+
+        ForbiddenNames = categories.Select(x => x.Name).ToList();
+    }
+}
