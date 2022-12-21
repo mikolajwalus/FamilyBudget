@@ -1,7 +1,11 @@
-﻿@page "/AdminDashboard"
-@using FamilyBudget.Client.Services.Identity;
+﻿@using FamilyBudget.Client.Services.Identity;
 @using FamilyBudget.Client.Services;
 @using FamilyBudget.Shared.Users;
+@using Microsoft.AspNetCore.Authorization;
+
+@page "/AdminDashboard"
+@attribute [Authorize(Roles = Roles.Admin)]
+
 @inject IUserService userService;
 @inject IUserProvider userProvider;
 

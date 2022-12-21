@@ -1,12 +1,13 @@
 ﻿using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.ApiRoutes;
 using FamilyBudget.Shared.BudgetEntries;
+using FamilyBudget.Shared.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FamilyBudget.Server.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Admin)]
     public class BudgetEntryCategoriesController : ControllerBase
     {
         private readonly IBudgetEntryCategoriesService _budgetEntriesService;

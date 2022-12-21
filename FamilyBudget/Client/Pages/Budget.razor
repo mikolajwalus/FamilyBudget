@@ -1,7 +1,9 @@
-﻿@page "/Budget"
-@page "/Budget/{id:guid}"
-@using FamilyBudget.Client.Services;
+﻿@using FamilyBudget.Client.Services;
 @using FamilyBudget.Shared.Budget;
+
+@page "/Budget"
+@page "/Budget/{id:guid}"
+
 @inject IBudgetService BudgetService;
 @inject NotificationService NotificationService;
 @inject NavigationManager NavigationManager;

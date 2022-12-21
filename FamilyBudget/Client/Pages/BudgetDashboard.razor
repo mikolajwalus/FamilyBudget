@@ -1,10 +1,12 @@
-﻿@page "/BudgetDashboard/{id:guid}"
-@using FamilyBudget.Client.Helpers;
+﻿@using FamilyBudget.Client.Helpers;
 @using FamilyBudget.Client.Services;
 @using FamilyBudget.Client.Validators
 @using FamilyBudget.Shared.Budget;
 @using FamilyBudget.Shared.BudgetEntries;
 @using FamilyBudget.Shared.Enums;
+
+@page "/BudgetDashboard/{id:guid}"
+
 @inject NotificationService NotificationService;
 @inject IBudgetService budgetService;
 @inject IBudgetEntriesService budgetEntriesService;

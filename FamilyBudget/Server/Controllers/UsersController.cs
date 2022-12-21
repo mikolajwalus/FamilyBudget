@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FamilyBudget.Server.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Admin)]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
