@@ -100,18 +100,23 @@ else
     [Parameter]
     public Guid Id { get; set; }
 
-    RadzenDataGrid<BudgetEntryDto> grid;
+    BudgetDto Budget;
+    List<BudgetEntryCategoryDto> Categories;
+    string categoryNameBeforEdit; 
     int Count;
     int CurrentPage = 1;
-    int PageSize = 5;
-    bool IsLoading = false;
+    List<BudgetEntryDto> Entries;
     IEnumerable<string> EntriesTypes = Enum.GetNames(typeof(BudgetEntriesType));
+    BudgetEntryDto entryToInsert;
+    BudgetEntryDto entryToUpdate;
+    RadzenDataGrid<BudgetEntryDto> grid;
+    bool IsLoading = false;
+    decimal moneyAmountBeforeEdit; 
+    int PageSize = 5;
     string SelectedEntriesType = BudgetEntriesType.All.ToString();
-    List<BudgetEntryCategoryDto> Categories;
     Guid SelectedCategoryId;
 
-    BudgetDto Budget;
-    List<BudgetEntryDto> Entries;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -217,10 +222,6 @@ else
         }
     }
 
-    BudgetEntryDto entryToInsert;
-    BudgetEntryDto entryToUpdate;
-    decimal moneyAmountBeforeEdit; 
-    string categoryNameBeforEdit; 
 
     async Task InsertRow()
     {

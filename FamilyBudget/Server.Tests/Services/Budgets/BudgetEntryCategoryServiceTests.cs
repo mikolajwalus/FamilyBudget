@@ -1,11 +1,11 @@
 ﻿using Bogus;
-using Duende.IdentityServer.EntityFramework.Options;
 using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Exceptions;
 using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Budgets;
 using FamilyBudget.Shared.BudgetEntries;
+using IdentityServer4.EntityFramework.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;

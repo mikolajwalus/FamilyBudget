@@ -1,9 +1,9 @@
 ﻿using Bogus;
-using Duende.IdentityServer.EntityFramework.Options;
 using FamilyBudget.Server.Data;
 using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
 using FamilyBudget.Server.Services.Identity;
+using IdentityServer4.EntityFramework.Options;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

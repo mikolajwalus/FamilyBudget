@@ -48,11 +48,9 @@ else
     [Parameter]
     public Guid? Id { get; set; }
 
-    List<UserForBudget> Users { get; set; } = new List<UserForBudget>();
-
     List<string> AssignedUsers = new List<string>();
-
     BudgetForCreationDto Dto = new BudgetForCreationDto{ AssignedUsers = new List<string>() };
+    List<UserForBudget> Users { get; set; } = new List<UserForBudget>();
 
     protected override async Task OnInitializedAsync()
     {

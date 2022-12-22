@@ -58,10 +58,14 @@ else
 }
 
 @code {
+
+    List<BudgetEntryCategoryDto> Categories;
+    string categoryNameBeforEdit; 
+    BudgetEntryCategoryDto categoryToInsert;
+    BudgetEntryCategoryDto categoryToUpdate;
+    List<string> ForbiddenNames;
     RadzenDataGrid<BudgetEntryCategoryDto> grid;
     bool IsLoading = false;
-    List<BudgetEntryCategoryDto> Categories;
-    List<string> ForbiddenNames;
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,9 +121,6 @@ else
         grid.CancelEditRow(category);
     }
 
-    BudgetEntryCategoryDto categoryToInsert;
-    BudgetEntryCategoryDto categoryToUpdate;
-    string categoryNameBeforEdit; 
 
     async Task InsertRow()
     {
