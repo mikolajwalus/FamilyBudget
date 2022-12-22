@@ -1,6 +1,6 @@
-﻿using Duende.IdentityServer.EntityFramework.Options;
-using FamilyBudget.Server.Infractructure.Configuration;
+﻿using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
+using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;

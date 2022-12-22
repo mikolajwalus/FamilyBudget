@@ -24,5 +24,13 @@
         /// UseOnePassowordForSeededUsers is true
         /// </summary>
         public string PasswordForSeededUsers { get; set; }
+        /// <summary>
+        /// Admin username
+        /// </summary>
+        public string AdminUsername { get; set; }
+        /// <summary>
+        /// Admin password
+        /// </summary>
+        public string AdminPassword { get; set; }
     }
 }

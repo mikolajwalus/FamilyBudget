@@ -1,0 +1,38 @@
+version: '3.4'
+
+services:
+  familybudget:
+    image: psdmikolajwaluskiewicz/family-budget:latest
+    ports:
+      - 8080:80
+      - 8001:443
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+;http://+
+      - ASPNETCORE_HTTPS_PORT=8001
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=password
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - ConnectionStrings:DefaultConnection=Server=sqldata;Database=FamilyBudget;User Id=sa;Password=Pass@word;TrustServerCertificate=true
+      - DataConfiguration:SeedData=true
+      - DataConfiguration:DisablePasswordRequirements=true
+      - DataConfiguration:UseOnePassowordForSeededUsers=true
+      - DataConfiguration:PasswordForSeededUsers=test
+      - DataConfiguration:AdminUsername=admin
+      - DataConfiguration:AdminPassword=password
+    volumes:
+      - ~\.aspnet\https:/https/
+    networks:
+      - internal
+  sqldata:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    environment:
+      - SA_PASSWORD=Pass@word
+      - ACCEPT_EULA=Y
+    ports:
+      - 5434:1433
+    networks:
+      - internal
+networks:
+  internal:
+    name: "internal"
+    external: false

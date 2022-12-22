@@ -17,7 +17,7 @@ builder.Services.Configure<DbContextConfiguration>(builder.Configuration.GetSect
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>()
@@ -103,6 +103,7 @@ try
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var context = services.GetRequiredService<ApplicationDbContext>();
 
+    await context.Database.EnsureCreatedAsync();
 
     var adminRoleExists = await context.Roles.AnyAsync(x => x.Name == Roles.Admin);
 
@@ -111,7 +112,6 @@ try
         await roleManager.CreateAsync(new IdentityRole(Roles.Admin));
     }
 
-    await context.Database.MigrateAsync();
     await Seed.SeedData(context, userManager, dataConfiguration);
 }
 catch (Exception ex)

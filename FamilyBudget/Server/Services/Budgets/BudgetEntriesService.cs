@@ -98,7 +98,7 @@ namespace FamilyBudget.Server.Services.Budgets
 
             var entries = await GetDtos(entriesQuery);
 
-            var paginationResponseDto = await GetPaginationResponse(dto, entriesAmount);
+            var paginationResponseDto = GetPaginationResponse(dto, entriesAmount);
 
             return new BudgetEntriesDto
             {
@@ -167,7 +167,7 @@ namespace FamilyBudget.Server.Services.Budgets
             }
         }
 
-        private async Task<PaginationResponseDto> GetPaginationResponse(BudgetEntriesRequestDto dto, int itemsAmount)
+        private PaginationResponseDto GetPaginationResponse(BudgetEntriesRequestDto dto, int itemsAmount)
         {
             var paginationResponseDto = new PaginationResponseDto()
             {

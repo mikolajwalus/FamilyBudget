@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using FamilyBudget.Server.Infractructure.Configuration;
 using FamilyBudget.Server.Models;
+using FamilyBudget.Shared.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,7 @@ namespace FamilyBudget.Server.Data
 
         private const string _queryToUpdateDates = @"
             UPDATE {0}
-            SET CreatedAt = DATEADD(day, ABS(CHECKSUM(NEWID())) % 720, '2020-01-01'),
+            SET CreatedAt = DATEADD(day, ABS(CHECKSUM(NEWID())) % 365, '2020-01-01'),
                 UpdatedAt = DATEADD(day, ABS(CHECKSUM(NEWID())) % 20 + 1, createdAt)";
 
         public static async Task SeedData(
@@ -35,11 +36,15 @@ namespace FamilyBudget.Server.Data
                 return;
             }
 
+            var adminUser = await CreateAdminUser(signInManager, configuration);
+
             var users = new Faker<ApplicationUser>()
                 .RuleFor(x => x.UserName, f => f.Internet.UserName() + f.IndexGlobal)
                 .Generate(50);
 
             await CreateUsers(signInManager, configuration, users);
+
+            users.Add(adminUser);
 
             var budgets = new Faker<Budget>()
                 .RuleFor(x => x.Name, f => f.Finance.AccountName() + f.IndexGlobal)
@@ -56,7 +61,22 @@ namespace FamilyBudget.Server.Data
 
             await CreateEntries(context, budgets, entriesCategories);
 
-            //await UpdateDates(context);
+            await UpdateDates(context);
+
+        }
+
+        private static async Task<ApplicationUser> CreateAdminUser(
+            UserManager<ApplicationUser> signInManager, DataConfiguration configuration)
+        {
+            var adminUser = new ApplicationUser
+            {
+                UserName = configuration.AdminUsername
+            };
+
+            await signInManager.CreateAsync(adminUser, configuration.AdminPassword);
+            await signInManager.AddToRoleAsync(adminUser, Roles.Admin);
+
+            return adminUser;
         }
 
         private static async Task UpdateDates(ApplicationDbContext context)

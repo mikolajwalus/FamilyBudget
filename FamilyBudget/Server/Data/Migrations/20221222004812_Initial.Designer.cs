@@ -3,6 +3,7 @@ using System;
 using FamilyBudget.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -11,54 +12,73 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FamilyBudget.Server.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20221218202749_Initial")]
+    [Migration("20221222004812_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.1");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "7.0.1")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ApplicationUserBudget", b =>
+                {
+                    b.Property<Guid>("UserBudgetsId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UsersAssignedToBudgetId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("UserBudgetsId", "UsersAssignedToBudgetId");
+
+                    b.HasIndex("UsersAssignedToBudgetId");
+
+                    b.ToTable("ApplicationUserBudget");
+                });
 
             modelBuilder.Entity("Duende.IdentityServer.EntityFramework.Entities.DeviceFlowCodes", b =>
                 {
                     b.Property<string>("UserCode")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ClientId")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CreationTime")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasMaxLength(50000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("DeviceCode")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("Expiration")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SessionId")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("SubjectId")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("UserCode");
 
@@ -73,31 +93,31 @@ namespace FamilyBudget.Server.Data.Migrations
             modelBuilder.Entity("Duende.IdentityServer.EntityFramework.Entities.Key", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Algorithm")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Data")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("DataProtected")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsX509Certificate")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<string>("Use")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -110,43 +130,43 @@ namespace FamilyBudget.Server.Data.Migrations
                 {
                     b.Property<string>("Key")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ClientId")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("ConsumedTime")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreationTime")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasMaxLength(50000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("Expiration")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SessionId")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("SubjectId")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Key");
 
@@ -164,54 +184,54 @@ namespace FamilyBudget.Server.Data.Migrations
             modelBuilder.Entity("FamilyBudget.Server.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
@@ -220,33 +240,117 @@ namespace FamilyBudget.Server.Data.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("FamilyBudget.Server.Models.Budget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Budgets");
+                });
+
+            modelBuilder.Entity("FamilyBudget.Server.Models.BudgetEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BudgetEntryCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("MoneyAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetEntryCategoryId");
+
+                    b.HasIndex("BudgetId");
+
+                    b.ToTable("BudgetEntries");
+                });
+
+            modelBuilder.Entity("FamilyBudget.Server.Models.BudgetEntryCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BudgetEntryCategories");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex");
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
                 });
@@ -255,17 +359,19 @@ namespace FamilyBudget.Server.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -278,17 +384,19 @@ namespace FamilyBudget.Server.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -301,18 +409,18 @@ namespace FamilyBudget.Server.Data.Migrations
                 {
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -324,10 +432,10 @@ namespace FamilyBudget.Server.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -339,22 +447,56 @@ namespace FamilyBudget.Server.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ApplicationUserBudget", b =>
+                {
+                    b.HasOne("FamilyBudget.Server.Models.Budget", null)
+                        .WithMany()
+                        .HasForeignKey("UserBudgetsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FamilyBudget.Server.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UsersAssignedToBudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FamilyBudget.Server.Models.BudgetEntry", b =>
+                {
+                    b.HasOne("FamilyBudget.Server.Models.BudgetEntryCategory", "BudgetEntryCategory")
+                        .WithMany("BudgetEntries")
+                        .HasForeignKey("BudgetEntryCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FamilyBudget.Server.Models.Budget", "Budget")
+                        .WithMany("BudgetEntries")
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Budget");
+
+                    b.Navigation("BudgetEntryCategory");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -406,6 +548,16 @@ namespace FamilyBudget.Server.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("FamilyBudget.Server.Models.Budget", b =>
+                {
+                    b.Navigation("BudgetEntries");
+                });
+
+            modelBuilder.Entity("FamilyBudget.Server.Models.BudgetEntryCategory", b =>
+                {
+                    b.Navigation("BudgetEntries");
                 });
 #pragma warning restore 612, 618
         }
